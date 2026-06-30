@@ -72,6 +72,7 @@ yarn.lock
 # Local signing secrets
 /scripts/local/android-signing.env
 /scripts/local/android-signing.cmd
+/scripts/local/android-signing.ps1
 *.jks
 *.keystore
 
