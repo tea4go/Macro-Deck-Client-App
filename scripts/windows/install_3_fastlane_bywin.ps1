@@ -40,6 +40,42 @@ function Sync-PathFromRegistry {
 
 <#
 .SYNOPSIS
+  从候选 RubyGems 国内镜像中逐个探测，返回第一个当前可连通的镜像地址。
+.OUTPUTS
+  [string] 可用镜像 URL；全部不可达时返回 $null。
+.NOTES
+  写死单一镜像的问题：遇到该镜像临时被拒/抖动就整体失败。这里运行时探测，
+  哪个通用哪个，全部不通才放弃（由调用方决定是否回退原站）。
+#>
+function Select-GemMirror {
+  $candidates = @(
+    'https://mirrors.ustc.edu.cn/rubygems/',
+    'https://mirrors.aliyun.com/rubygems/',
+    'https://mirrors.tuna.tsinghua.edu.cn/rubygems/',
+    'https://gems.ruby-china.com/'
+  )
+  foreach ($m in $candidates) {
+    try {
+      $probe = ($m.TrimEnd('/')) + '/specs.4.8.gz'
+      $req = [System.Net.HttpWebRequest]::Create($probe)
+      $req.Method = 'HEAD'
+      $req.Timeout = 8000
+      $resp = $req.GetResponse()
+      $code = [int]$resp.StatusCode
+      $resp.Close()
+      if ($code -eq 200) {
+        Write-Ok "选用 RubyGems 镜像：$m"
+        return $m
+      }
+    } catch {
+      Write-Warn "镜像不可用，尝试下一个：$m"
+    }
+  }
+  return $null
+}
+
+<#
+.SYNOPSIS
   判断 Gemfile.lock 锁定的 Bundler 版本是否与当前 bundle 版本不一致。
 .PARAMETER BundleRoot
   含 Gemfile / Gemfile.lock 的目录。
@@ -98,15 +134,25 @@ function Ensure-FastlaneBundle {
   Write-Ok "使用 Gemfile：$gemfile"
 
   if (-not $CheckOnly) {
-    # ① 配置 RubyGems 国内镜像（项目级，写入 $bundleRoot\.bundle\config，不污染全局）。
-    #    rubygems.org 国内访问慢，bundle install 拉 fastlane 一大堆依赖会非常慢甚至超时。
-    Write-Host '  配置 RubyGems 国内镜像（USTC）...' -ForegroundColor Cyan
-    Invoke-NativeIn -Path $bundleRoot -Block {
-      & bundle config set --local mirror.https://rubygems.org https://mirrors.ustc.edu.cn/rubygems
-    } | Out-Null
+    # ① 选一个当前可连通的 RubyGems 国内镜像并配置（项目级，写入 $bundleRoot\.bundle\config）。
+    #    Gemfile 写死 source "https://rubygems.org"，国内直连依赖 API 会超时。
+    #    用 bundle config mirror 把对 rubygems.org 的请求整体重定向到镜像；
+    #    fallback_timeout 让镜像短暂无响应时快速回退，避免长时间卡住。
+    $mirror = Select-GemMirror
+    if ($mirror) {
+      Invoke-NativeIn -Path $bundleRoot -Block {
+        & bundle config set --local mirror.https://rubygems.org $mirror
+      } | Out-Null
+      Invoke-NativeIn -Path $bundleRoot -Block {
+        & bundle config set --local mirror.https://rubygems.org.fallback_timeout 3
+      } | Out-Null
+    } else {
+      Write-Warn '所有国内镜像均不可达，将直接使用 rubygems.org（可能较慢）。'
+      Write-Warn '若长时间卡住，请检查本机网络/防火墙/安全软件是否拦截了镜像站。'
+    }
 
     # ② 对齐 lockfile 的 BUNDLED WITH 与当前 Bundler 版本。
-    #    否则 Bundler 4.x 见到 lockfile 锁的 2.4.10 会去下载并切换到旧版重跑（慢且无谓）。
+    #    否则 Bundler 4.x 见到 lockfile 锁的旧版会去下载并切换到旧版重跑（慢且无谓）。
     if (Test-LockfileBundlerMismatch -BundleRoot $bundleRoot) {
       Write-Warn 'Gemfile.lock 的 Bundler 版本与当前不一致，正在对齐 ...'
       Invoke-NativeIn -Path $bundleRoot -Block { & bundle update --bundler } | Out-Null
