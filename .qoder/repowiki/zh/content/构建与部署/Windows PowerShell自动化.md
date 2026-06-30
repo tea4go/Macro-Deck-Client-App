@@ -3,7 +3,9 @@
 <cite>
 **本文档引用的文件**
 - [_common.ps1](file://scripts/windows/_common.ps1)
+- [build_web_bywin.ps1](file://scripts/windows/build_web_bywin.ps1)
 - [build_windows_bywin.ps1](file://scripts/windows/build_windows_bywin.ps1)
+- [build_android_bywin.ps1](file://scripts/windows/build_android_bywin.ps1)
 - [install_2_c_compile_bywin.ps1](file://scripts/windows/install_2_c_compile_bywin.ps1)
 - [install_4_android_sdk_bywin.ps1](file://scripts/windows/install_4_android_sdk_bywin.ps1)
 - [remove_1_android_sdk_bywin.ps1](file://scripts/windows/remove_1_android_sdk_bywin.ps1)
@@ -12,6 +14,14 @@
 - [scripts/README.md](file://scripts/README.md)
 - [README.md](file://README.md)
 </cite>
+
+## 更新摘要
+**变更内容**
+- 新增 Windows PowerShell Web 构建脚本 `build_web_bywin.ps1` 的详细分析
+- 更新项目结构图以包含新的 Web 构建脚本
+- 增强核心组件分析，重点介绍 Web 构建脚本的功能特性
+- 添加 Web 构建流程的详细架构图
+- 更新依赖关系分析，反映新增的 Web 构建脚本
 
 ## 目录
 1. [简介](#简介)
@@ -30,6 +40,8 @@ Macro Deck Client App 是一个基于 Angular 和 Ionic 框架的跨平台应用
 
 这些 PowerShell 脚本提供了从基础环境检查到复杂工具链安装的全方位自动化支持，特别针对 Windows 开发环境进行了深度优化。脚本系统采用模块化设计，通过共享的通用函数库实现代码复用，确保了一致的用户体验和可靠的执行流程。
 
+**更新** 新增了专门的 Web 构建脚本 `build_web_bywin.ps1`，为 Windows 平台提供完整的 Web/PWA 构建支持，包括环境检查、Node.js 版本验证、npm 检查以及 ajv 版本冲突自动修复功能。
+
 ## 项目结构
 
 项目中的 Windows PowerShell 自动化脚本主要位于 `scripts/windows/` 目录下，采用功能导向的命名约定：
@@ -44,6 +56,8 @@ InstallSDK[install_4_android_sdk_bywin.ps1<br/>Android SDK安装]
 end
 subgraph "构建脚本"
 BuildWin[build_windows_bywin.ps1<br/>Windows桌面应用构建]
+BuildWeb[build_web_bywin.ps1<br/>Web/PWA构建]
+BuildAndroid[build_android_bywin.ps1<br/>Android应用构建]
 end
 subgraph "卸载脚本"
 RemoveSDK[remove_1_android_sdk_bywin.ps1<br/>Android SDK卸载]
@@ -53,6 +67,8 @@ end
 Common --> InstallC
 Common --> InstallSDK
 Common --> BuildWin
+Common --> BuildWeb
+Common --> BuildAndroid
 Common --> RemoveSDK
 Common --> RemoveRust
 Common --> RemoveC
@@ -61,15 +77,15 @@ end
 
 **图表来源**
 - [scripts/windows/_common.ps1:1-1114](file://scripts/windows/_common.ps1#L1-L1114)
-- [scripts/windows/install_2_c_compile_bywin.ps1:1-431](file://scripts/windows/install_2_c_compile_bywin.ps1#L1-L431)
-- [scripts/windows/install_4_android_sdk_bywin.ps1:1-293](file://scripts/windows/install_4_android_sdk_bywin.ps1#L1-L293)
+- [scripts/windows/build_web_bywin.ps1:1-223](file://scripts/windows/build_web_bywin.ps1#L1-L223)
 - [scripts/windows/build_windows_bywin.ps1:1-229](file://scripts/windows/build_windows_bywin.ps1#L1-L229)
+- [scripts/windows/build_android_bywin.ps1:1-475](file://scripts/windows/build_android_bywin.ps1#L1-L475)
 
 **章节来源**
 - [scripts/windows/_common.ps1:1-1114](file://scripts/windows/_common.ps1#L1-L1114)
-- [scripts/windows/install_2_c_compile_bywin.ps1:1-431](file://scripts/windows/install_2_c_compile_bywin.ps1#L1-L431)
-- [scripts/windows/install_4_android_sdk_bywin.ps1:1-293](file://scripts/windows/install_4_android_sdk_bywin.ps1#L1-L293)
+- [scripts/windows/build_web_bywin.ps1:1-223](file://scripts/windows/build_web_bywin.ps1#L1-L223)
 - [scripts/windows/build_windows_bywin.ps1:1-229](file://scripts/windows/build_windows_bywin.ps1#L1-L229)
+- [scripts/windows/build_android_bywin.ps1:1-475](file://scripts/windows/build_android_bywin.ps1#L1-L475)
 
 ## 核心组件
 
@@ -99,6 +115,34 @@ end
 - [scripts/windows/_common.ps1:11-117](file://scripts/windows/_common.ps1#L11-L117)
 - [scripts/windows/_common.ps1:119-213](file://scripts/windows/_common.ps1#L119-L213)
 - [scripts/windows/_common.ps1:242-341](file://scripts/windows/_common.ps1#L242-L341)
+
+### Web 构建脚本 (build_web_bywin.ps1)
+
+**新增** 这是专门为 Windows 平台设计的 Web/PWA 构建脚本，提供了完整的环境检查和构建支持。
+
+#### 核心功能特性
+- **三种操作模式**:
+  - `build`: Web/PWA 生产构建（产物在 `www/`）
+  - `dev`: 启动本地开发服务器（热重载）
+  - `check`: 仅检查环境，不执行构建
+- **Angular 19 兼容性**: 支持 Angular 19 的严格版本要求
+- **自动环境修复**: ajv 版本冲突自动修复机制
+
+#### 环境检查流程
+1. **Node.js 版本验证**: 检测 Node.js 主版本 ≥ 18
+2. **npm 检查**: 验证 npm 可用性和版本
+3. **ajv 版本冲突检测**: 自动修复 v6 被提升到顶层的问题
+
+#### 构建准备阶段
+- **依赖安装**: 自动检测并安装 `node_modules`
+- **版本修复**: 确保 ajv 版本为 8+
+- **配置优化**: 支持多种 Angular 构建配置
+
+**章节来源**
+- [scripts/windows/build_web_bywin.ps1:17-26](file://scripts/windows/build_web_bywin.ps1#L17-L26)
+- [scripts/windows/build_web_bywin.ps1:35-66](file://scripts/windows/build_web_bywin.ps1#L35-L66)
+- [scripts/windows/build_web_bywin.ps1:74-84](file://scripts/windows/build_web_bywin.ps1#L74-L84)
+- [scripts/windows/build_web_bywin.ps1:97-124](file://scripts/windows/build_web_bywin.ps1#L97-L124)
 
 ### C/C++ 编译器安装脚本
 
@@ -158,6 +202,26 @@ end
 - [scripts/windows/build_windows_bywin.ps1:45-76](file://scripts/windows/build_windows_bywin.ps1#L45-L76)
 - [scripts/windows/build_windows_bywin.ps1:141-229](file://scripts/windows/build_windows_bywin.ps1#L141-L229)
 
+### Android 应用构建脚本
+
+**更新** 该脚本提供了完整的 Android 应用构建支持，包括环境检查、项目重建和签名配置。
+
+#### 核心功能
+- **环境检查**: C/C++ 编译器、Rust 工具链、Java 17、Android SDK/NDK
+- **项目重建**: 自动清理和重建 `gen/android` 工程
+- **内存优化**: 针对 Windows OOM 问题的 Gradle 配置
+- **签名管理**: 自动生成 keystore 文件
+
+#### 特殊优化
+- **进程管理**: 自动停止可能锁定目录的 Gradle/Kotlin Daemon
+- **文件锁定处理**: 多次重试机制应对 Windows 文件锁定问题
+- **镜像源配置**: 自动配置 Gradle 包装器镜像
+
+**章节来源**
+- [scripts/windows/build_android_bywin.ps1:45-58](file://scripts/windows/build_android_bywin.ps1#L45-L58)
+- [scripts/windows/build_android_bywin.ps1:71-135](file://scripts/windows/build_android_bywin.ps1#L71-L135)
+- [scripts/windows/build_android_bywin.ps1:149-177](file://scripts/windows/build_android_bywin.ps1#L149-L177)
+
 ## 架构概览
 
 整个 PowerShell 自动化系统采用分层架构设计，确保了高内聚、低耦合的特性：
@@ -173,6 +237,7 @@ EnvCheck[环境检查]
 Install[安装流程]
 Uninstall[卸载流程]
 Build[构建流程]
+WebBuild[Web构建流程]
 end
 subgraph "基础设施层"
 Common[通用函数库]
@@ -186,15 +251,20 @@ MSYS2[MSYS2/Pacman]
 AndroidSDK[Android SDK]
 Rust[Rust Toolchain]
 WebView2[WebView2 Runtime]
+NodeJS[Node.js]
+NPM[npm]
+Ionic[Ionic CLI]
 end
 CLI --> EnvCheck
 CLI --> Install
 CLI --> Uninstall
 CLI --> Build
+CLI --> WebBuild
 EnvCheck --> Common
 Install --> Common
 Uninstall --> Common
 Build --> Common
+WebBuild --> Common
 Common --> Helpers
 Common --> Download
 Common --> Registry
@@ -202,16 +272,59 @@ Install --> VS
 Install --> MSYS2
 Install --> AndroidSDK
 Install --> Rust
+Install --> NodeJS
+Install --> NPM
 Build --> WebView2
+WebBuild --> Ionic
+WebBuild --> NodeJS
+WebBuild --> NPM
 ```
 
 **图表来源**
 - [scripts/windows/_common.ps1:1-1114](file://scripts/windows/_common.ps1#L1-L1114)
-- [scripts/windows/install_2_c_compile_bywin.ps1:1-431](file://scripts/windows/install_2_c_compile_bywin.ps1#L1-L431)
-- [scripts/windows/install_4_android_sdk_bywin.ps1:1-293](file://scripts/windows/install_4_android_sdk_bywin.ps1#L1-L293)
+- [scripts/windows/build_web_bywin.ps1:1-223](file://scripts/windows/build_web_bywin.ps1#L1-L223)
 - [scripts/windows/build_windows_bywin.ps1:1-229](file://scripts/windows/build_windows_bywin.ps1#L1-L229)
+- [scripts/windows/build_android_bywin.ps1:1-475](file://scripts/windows/build_android_bywin.ps1#L1-L475)
 
 ## 详细组件分析
+
+### Web 构建流程详细分析
+
+```mermaid
+sequenceDiagram
+participant User as 用户
+participant WebScript as Web构建脚本
+participant Common as 通用函数
+participant NodeJS as Node.js
+participant NPM as npm
+participant Ionic as Ionic CLI
+User->>WebScript : 执行 build_web_bywin.ps1 <build|dev|check>
+WebScript->>Common : 启用自动确认模式
+WebScript->>NodeJS : 检测 Node.js 版本
+NodeJS-->>WebScript : 返回版本信息
+WebScript->>NPM : 检测 npm 可用性
+NPM-->>WebScript : 返回 npm 版本
+WebScript->>Common : 输出环境摘要
+alt Command = check
+WebScript->>User : 显示检查结果
+else Command = build/dev
+WebScript->>NPM : 检查 node_modules
+alt 不存在
+WebScript->>NPM : 执行 npm install
+NPM-->>WebScript : 安装完成
+end
+WebScript->>WebScript : 检查并修复 ajv 版本
+WebScript->>Ionic : 执行构建或开发服务器
+Ionic-->>WebScript : 返回构建结果
+WebScript->>User : 显示构建状态
+end
+```
+
+**图表来源**
+- [scripts/windows/build_web_bywin.ps1:127-137](file://scripts/windows/build_web_bywin.ps1#L127-L137)
+- [scripts/windows/build_web_bywin.ps1:145-157](file://scripts/windows/build_web_bywin.ps1#L145-L157)
+- [scripts/windows/build_web_bywin.ps1:169-184](file://scripts/windows/build_web_bywin.ps1#L169-L184)
+- [scripts/windows/build_web_bywin.ps1:190-206](file://scripts/windows/build_web_bywin.ps1#L190-L206)
 
 ### 环境检查与验证流程
 
@@ -296,6 +409,7 @@ StatusReport --> End([卸载完成])
 - [scripts/windows/remove_3_c_compile_bywin.ps1:24-95](file://scripts/windows/remove_3_c_compile_bywin.ps1#L24-L95)
 
 **章节来源**
+- [scripts/windows/build_web_bywin.ps1:1-223](file://scripts/windows/build_web_bywin.ps1#L1-L223)
 - [scripts/windows/install_4_android_sdk_bywin.ps1:1-293](file://scripts/windows/install_4_android_sdk_bywin.ps1#L1-L293)
 - [scripts/windows/remove_1_android_sdk_bywin.ps1:1-225](file://scripts/windows/remove_1_android_sdk_bywin.ps1#L1-L225)
 - [scripts/windows/remove_2_rust_bywin.ps1:1-85](file://scripts/windows/remove_2_rust_bywin.ps1#L1-L85)
@@ -316,6 +430,8 @@ InstallSDK[install_4_android_sdk_bywin.ps1]
 end
 subgraph "构建脚本"
 BuildWin[build_windows_bywin.ps1]
+BuildWeb[build_web_bywin.ps1]
+BuildAndroid[build_android_bywin.ps1]
 end
 subgraph "卸载脚本"
 RemoveSDK[remove_1_android_sdk_bywin.ps1]
@@ -325,17 +441,24 @@ end
 Common --> InstallC
 Common --> InstallSDK
 Common --> BuildWin
+Common --> BuildWeb
+Common --> BuildAndroid
 Common --> RemoveSDK
 Common --> RemoveRust
 Common --> RemoveC
 InstallC --> BuildWin
-InstallSDK --> BuildWin
+InstallC --> BuildAndroid
+InstallSDK --> BuildAndroid
 RemoveSDK --> BuildWin
+RemoveSDK --> BuildWeb
+RemoveSDK --> BuildAndroid
 ```
 
 **图表来源**
 - [scripts/windows/_common.ps1:24-33](file://scripts/windows/_common.ps1#L24-L33)
+- [scripts/windows/build_web_bywin.ps1:27-29](file://scripts/windows/build_web_bywin.ps1#L27-L29)
 - [scripts/windows/build_windows_bywin.ps1:27-29](file://scripts/windows/build_windows_bywin.ps1#L27-L29)
+- [scripts/windows/build_android_bywin.ps1:27-29](file://scripts/windows/build_android_bywin.ps1#L27-L29)
 
 ### 外部依赖分析
 
@@ -351,12 +474,18 @@ RemoveSDK --> BuildWin
 - **Android Studio**: Android 开发环境
 - **Rustup**: Rust 工具链管理
 
+#### Web 开发工具
+- **Node.js**: JavaScript 运行时环境
+- **npm**: 包管理器
+- **Ionic CLI**: Web 应用构建工具
+
 #### 网络资源
 - **国内镜像源**: 清华大学、中科大
 - **GitHub**: 原始下载源
 - **官方下载站**: 各组件官方源
 
 **章节来源**
+- [scripts/windows/build_web_bywin.ps1:35-66](file://scripts/windows/build_web_bywin.ps1#L35-L66)
 - [scripts/windows/install_2_c_compile_bywin.ps1:43-83](file://scripts/windows/install_2_c_compile_bywin.ps1#L43-L83)
 - [scripts/windows/install_4_android_sdk_bywin.ps1:39-43](file://scripts/windows/install_4_android_sdk_bywin.ps1#L39-L43)
 
@@ -376,10 +505,17 @@ Windows 平台上的 Rust 构建经常遇到内存不足的问题，脚本系统
 - **代码生成单元**: 增加到 256 (`CARGO_PROFILE_RELEASE_CODEGEN_UNITS=256`)
 - **链接时优化**: 禁用 LTO (`CARGO_PROFILE_RELEASE_LTO=false`)
 
-### 下载性能优化
+### Web 构建性能优化
 
-#### 多源并行下载
-- **竞速算法**: 并行测试多个下载源的速度
+**新增** Web 构建脚本特别针对 Angular 19 的性能要求进行了优化：
+
+#### ajv 版本冲突自动修复
+- **版本检测**: 自动检测 node_modules/ajv 的版本
+- **智能修复**: 当检测到 v6 被提升到顶层时自动修复
+- **命令执行**: 使用 `npm install ajv@^8.20.0 --legacy-peer-deps`
+
+#### 下载性能优化
+- **多源并行下载**: 并行测试多个下载源的速度
 - **智能选择**: 自动选择最快的下载源
 - **文件校验**: 下载完成后验证文件大小
 
@@ -389,6 +525,7 @@ Windows 平台上的 Rust 构建经常遇到内存不足的问题，脚本系统
 - **进度显示**: 实时进度和速度反馈
 
 **章节来源**
+- [scripts/windows/build_web_bywin.ps1:97-124](file://scripts/windows/build_web_bywin.ps1#L97-L124)
 - [scripts/windows/build_windows_bywin.ps1:188-196](file://scripts/windows/build_windows_bywin.ps1#L188-L196)
 - [scripts/windows/_common.ps1:607-728](file://scripts/windows/_common.ps1#L607-L728)
 
@@ -406,6 +543,24 @@ Test-Gnu
 
 # 检查 Rust 工具链
 Test-RustToolchain
+```
+
+#### Web 构建问题
+**新增** 针对 Web 构建的特定故障排除：
+
+```powershell
+# 检查 Node.js 版本
+node --version
+
+# 检查 npm 版本
+npm --version
+
+# 手动修复 ajv 版本冲突
+npm install ajv@^8.20.0 --legacy-peer-deps
+
+# 清理 node_modules 并重新安装
+rm -rf node_modules
+npm install --legacy-peer-deps
 ```
 
 #### 下载问题
@@ -447,6 +602,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 - 删除 `~\.cargo` 和 `~\.rustup` 目录
 
 **章节来源**
+- [scripts/windows/build_web_bywin.ps1:127-137](file://scripts/windows/build_web_bywin.ps1#L127-L137)
 - [scripts/windows/remove_1_android_sdk_bywin.ps1:26-37](file://scripts/windows/remove_1_android_sdk_bywin.ps1#L26-L37)
 - [scripts/windows/remove_2_rust_bywin.ps1:40-54](file://scripts/windows/remove_2_rust_bywin.ps1#L40-L54)
 - [scripts/windows/remove_3_c_compile_bywin.ps1:32-53](file://scripts/windows/remove_3_c_compile_bywin.ps1#L32-L53)
@@ -455,6 +611,8 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 Macro Deck Client App 的 Windows PowerShell 自动化系统展现了现代开发工具链的最佳实践。通过精心设计的模块化架构、完善的错误处理机制和智能化的用户交互体验，这套脚本系统为开发者提供了高效、可靠的开发环境管理解决方案。
 
+**更新** 新增的 Web 构建脚本 `build_web_bywin.ps1` 进一步完善了整个自动化系统，为 Windows 平台提供了完整的 Web/PWA 构建支持。该脚本不仅具备了完整的环境检查和构建功能，还特别针对 Angular 19 的严格要求和常见的 ajv 版本冲突问题提供了智能解决方案。
+
 ### 主要优势
 
 1. **高度自动化**: 减少了手动配置的复杂性和出错概率
@@ -462,6 +620,7 @@ Macro Deck Client App 的 Windows PowerShell 自动化系统展现了现代开�
 3. **多源支持**: 国内镜像源加速下载，提高可靠性
 4. **错误恢复**: 完善的错误处理和恢复机制
 5. **用户友好**: 统一的交互界面和详细的进度反馈
+6. **平台专优化**: 针对不同平台（Windows、Web、Android）的特定优化
 
 ### 技术特色
 
@@ -469,5 +628,6 @@ Macro Deck Client App 的 Windows PowerShell 自动化系统展现了现代开�
 - **环境隔离**: 支持用户级和系统级环境变量配置
 - **性能优化**: 针对 Windows 平台的特殊优化措施
 - **安全考虑**: 完整的卸载和清理机制
+- **版本兼容**: 智能处理不同框架版本的兼容性问题
 
-这套 PowerShell 自动化系统不仅提高了开发效率，更为项目的长期维护奠定了坚实的基础，是现代跨平台开发项目的优秀范例。
+这套 PowerShell 自动化系统不仅提高了开发效率，更为项目的长期维护奠定了坚实的基础，是现代跨平台开发项目的优秀范例。新增的 Web 构建脚本进一步增强了系统的完整性和实用性，为开发者提供了从桌面应用到 Web 应用的一站式自动化解决方案。
