@@ -73,6 +73,9 @@ function Ensure-Ruby {
     "https://ghfast.top/https://github.com/$relPath",
     "https://github.com/$relPath"
   )
+  # 固定版本兜底
+  $fixedUrl = 'http://nj.yj2025.icu:23432/update/winapp/rubyinstaller-devkit-4.0.5-1-x64.exe'
+  $urls += $fixedUrl
 
   $installer = Join-Path $env:TEMP $rubyFile
   Write-Host "  从镜像下载 RubyInstaller-DevKit（$rubyTag）..." -ForegroundColor Cyan

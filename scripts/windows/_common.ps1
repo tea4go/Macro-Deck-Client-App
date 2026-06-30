@@ -961,6 +961,8 @@ function Install-WingetPackage {
     Write-Fail "缺少 winget，无法自动安装 $Name"
     return $false
   }
+  $cmd = "winget install --id $Id --source winget --accept-package-agreements --accept-source-agreements"
+  Write-Host "[CMD] $cmd" -ForegroundColor Cyan
   Invoke-NativeStream -Block { & winget install --id $Id --source winget --accept-package-agreements --accept-source-agreements }
   if ($LASTEXITCODE -ne 0) {
     Write-Fail "$Name 安装失败"
