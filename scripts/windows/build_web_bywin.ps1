@@ -1,29 +1,34 @@
 <#
 .SYNOPSIS
-  在 Windows 上检查环境并构建 Ionic Web/PWA，或启动本地开发服务器。
+  在 Windows 上检查环境并构建 Ionic Web/PWA、预览构建产物，或启动开发服务器。
 .DESCRIPTION
   主要流程：
   - [check] 仅做环境检查（Node.js 版本、npm）
   - [build] npm install（node_modules 缺失时）-> ajv 版本自愈 -> npx ionic build
   - [dev]   npm install（node_modules 缺失时）-> npx ionic serve（热重载）
+  - [serve] 用 http-server 静态托管 www\ 构建产物（在 /client/ 路径下还原 baseHref）
 .PARAMETER Command
-  build=Web/PWA 生产构建（产物在 www\），dev=启动本地开发服务器，check=仅检查环境。
+  build=生产构建（产物在 www\），dev=开发服务器（热重载），serve=预览 www\ 产物，check=仅检查环境。
 .PARAMETER Configuration
   Angular 构建配置（默认 web_production）。仅 build 命令使用。
   可用值：web_production | production | development。
 .PARAMETER Clean
   构建前清除 Angular 构建缓存（.angular\cache）。遇到 TypeScript 编译缓存错误时使用。
+.PARAMETER Port
+  serve 命令的监听端口（默认 8080）。
 .PARAMETER Yes
   自动确认（静默模式）。
 #>
 param(
   [Parameter(Position = 0)]
-  [ValidateSet('dev', 'build', 'check')]
+  [ValidateSet('dev', 'build', 'serve', 'check')]
   [string]$Command,
 
   [string]$Configuration = 'web_production',
 
   [switch]$Clean,
+
+  [int]$Port = 8080,
 
   [Alias('y')]
   [switch]$Yes
@@ -129,15 +134,17 @@ function Assert-AjvV8([string]$ProjectRoot) {
 
 # ─── 无命令时输出用法 ─────────────────────────────────────────────────────────
 if ([string]::IsNullOrWhiteSpace($Command)) {
-  Write-Host "用法：$($MyInvocation.MyCommand.Name) <build|dev|check> [-Configuration <config>] [-Clean] [-y]" -ForegroundColor Cyan
+  Write-Host "用法：$($MyInvocation.MyCommand.Name) <build|dev|serve|check> [-Configuration <config>] [-Clean] [-Port <n>] [-y]" -ForegroundColor Cyan
   Write-Host ""
   Write-Host "  build             构建 Web/PWA 产物（输出到 www\）"
   Write-Host "  dev               启动本地开发服务器（热重载，Ctrl+C 退出）"
+  Write-Host "  serve             用 http-server 预览 www\ 构建产物（Ctrl+C 退出）"
   Write-Host "  check             仅检查环境，不执行构建"
   Write-Host "  -Configuration    Angular 构建配置（默认 web_production）"
   Write-Host "                    可选：web_production | production | development"
   Write-Host "  -Clean            构建前清除 Angular 缓存（.angular\cache）"
   Write-Host "                    遇到 TypeScript 编译缓存错误时使用"
+  Write-Host "  -Port             serve 命令的监听端口（默认 8080）"
   Write-Host "  -y                自动确认（静默模式）"
   exit 1
 }
@@ -165,6 +172,37 @@ if ($Failed) {
 if ($Command -eq 'check') {
   Write-Banner -Title '所有检查通过！' -Color Cyan -TitleColor Green
   Write-Host ""
+  exit 0
+}
+
+# ─── serve：用 http-server 预览 www\ 构建产物 ────────────────────────────────
+# 产物里资源是绝对路径 /client/...（web_production 的 baseHref），所以在临时目录
+# 用 junction 把 client 指向 www，再以临时目录为根托管，即可还原 /client/ 前缀。
+if ($Command -eq 'serve') {
+  $wwwDir = Join-Path $projectRoot 'www'
+  if (-not (Test-Path -LiteralPath (Join-Path $wwwDir 'index.html'))) {
+    Write-Fail "未找到构建产物 www\index.html，请先运行：.\$($MyInvocation.MyCommand.Name) build"
+    exit 1
+  }
+
+  $serveRoot = Join-Path $env:TEMP ('mdc-serve-' + [System.Guid]::NewGuid().ToString('N').Substring(0, 8))
+  New-Item -ItemType Directory -Path $serveRoot -Force | Out-Null
+  New-Item -ItemType Junction -Path (Join-Path $serveRoot 'client') -Target $wwwDir | Out-Null
+
+  Write-Banner -Title "预览构建产物（Ctrl+C 退出）" -Color Cyan
+  Write-Host ""
+  Write-Ok "访问地址：http://localhost:$Port/client/"
+  Write-Host "  运行命令：npx http-server <临时目录> -p $Port -c-1" -ForegroundColor Cyan
+  Write-Host ""
+  try {
+    Invoke-NativeStreamIn -Path $projectRoot -Block { & npx -y http-server $serveRoot -p $Port -c-1 }
+  }
+  finally {
+    # Ctrl+C 退出后清理临时目录与 junction（删 junction 不会影响 www 真实内容）
+    Remove-Item -LiteralPath $serveRoot -Recurse -Force -ErrorAction SilentlyContinue
+    Write-Host ""
+    Write-Ok "已清理临时托管目录"
+  }
   exit 0
 }
 
