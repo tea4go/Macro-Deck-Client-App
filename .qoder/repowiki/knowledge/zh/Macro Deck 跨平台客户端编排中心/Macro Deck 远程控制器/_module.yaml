@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: app
-title: Macro Deck 远程控制客户端
+title: Macro Deck 远程控制器
 scope:
     - src/
 source_files: []

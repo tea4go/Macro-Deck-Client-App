@@ -6,22 +6,24 @@
 - [build_web_bywin.ps1](file://scripts/windows/build_web_bywin.ps1)
 - [build_windows_bywin.ps1](file://scripts/windows/build_windows_bywin.ps1)
 - [build_android_bywin.ps1](file://scripts/windows/build_android_bywin.ps1)
+- [install_1_base_tools_bywin.ps1](file://scripts/windows/install_1_base_tools_bywin.ps1)
 - [install_2_c_compile_bywin.ps1](file://scripts/windows/install_2_c_compile_bywin.ps1)
+- [install_3_rust_bywin.ps1](file://scripts/windows/install_3_rust_bywin.ps1)
 - [install_4_android_sdk_bywin.ps1](file://scripts/windows/install_4_android_sdk_bywin.ps1)
 - [remove_1_android_sdk_bywin.ps1](file://scripts/windows/remove_1_android_sdk_bywin.ps1)
 - [remove_2_rust_bywin.ps1](file://scripts/windows/remove_2_rust_bywin.ps1)
 - [remove_3_c_compile_bywin.ps1](file://scripts/windows/remove_3_c_compile_bywin.ps1)
 - [scripts/README.md](file://scripts/README.md)
-- [README.md](file://README.md)
+- [scripts/windows.bak/_common.ps1](file://scripts/windows.bak/_common.ps1)
 </cite>
 
 ## 更新摘要
 **变更内容**
-- 新增 Windows PowerShell Web 构建脚本 `build_web_bywin.ps1` 的详细分析
-- 更新项目结构图以包含新的 Web 构建脚本
-- 增强核心组件分析，重点介绍 Web 构建脚本的功能特性
-- 添加 Web 构建流程的详细架构图
-- 更新依赖关系分析，反映新增的 Web 构建脚本
+- 新增六个专门的PowerShell构建脚本的详细分析
+- 更新项目结构图以包含完整的脚本架构
+- 增强核心组件分析，重点介绍新的脚本功能特性
+- 添加完整的CMD脚本迁移说明
+- 更新依赖关系分析，反映新增的脚本生态系统
 
 ## 目录
 1. [简介](#简介)
@@ -38,33 +40,39 @@
 
 Macro Deck Client App 是一个基于 Angular 和 Ionic 框架的跨平台应用程序，支持 iOS、Android 和 Web 平台。该项目包含了完整的 Windows PowerShell 自动化脚本系统，专门用于简化开发环境的搭建、维护和管理。
 
-这些 PowerShell 脚本提供了从基础环境检查到复杂工具链安装的全方位自动化支持，特别针对 Windows 开发环境进行了深度优化。脚本系统采用模块化设计，通过共享的通用函数库实现代码复用，确保了一致的用户体验和可靠的执行流程。
+**重大现代化升级** 该系统现已包含七个专门的PowerShell构建脚本，涵盖从基础工具安装到复杂应用构建的全流程自动化。新增的脚本体系包括基础工具管理、C/C++编译器安装、Rust工具链管理、Android SDK安装以及完整的构建脚本，形成了完整的开发环境自动化解决方案。
 
-**更新** 新增了专门的 Web 构建脚本 `build_web_bywin.ps1`，为 Windows 平台提供完整的 Web/PWA 构建支持，包括环境检查、Node.js 版本验证、npm 检查以及 ajv 版本冲突自动修复功能。
+这些 PowerShell 脚本提供了从基础环境检查到复杂工具链安装的全方位自动化支持，特别针对 Windows 开发环境进行了深度优化。脚本系统采用模块化设计，通过共享的通用函数库实现代码复用，确保了一致的用户体验和可靠的执行流程。
 
 ## 项目结构
 
-项目中的 Windows PowerShell 自动化脚本主要位于 `scripts/windows/` 目录下，采用功能导向的命名约定：
+项目中的 Windows PowerShell 自动化脚本主要位于 `scripts/windows/` 目录下，现已发展为包含七个核心脚本的完整生态系统：
 
 ```mermaid
 graph TB
-subgraph "Windows PowerShell自动化脚本"
+subgraph "Windows PowerShell自动化脚本系统"
 Common[_common.ps1<br/>通用函数库]
-subgraph "安装脚本"
+subgraph "基础工具管理"
+BaseTools[install_1_base_tools_bywin.ps1<br/>基础工具安装]
+end
+subgraph "编译环境安装"
 InstallC[install_2_c_compile_bywin.ps1<br/>C/C++编译器安装]
+InstallRust[install_3_rust_bywin.ps1<br/>Rust工具链安装]
 InstallSDK[install_4_android_sdk_bywin.ps1<br/>Android SDK安装]
 end
-subgraph "构建脚本"
+subgraph "应用构建脚本"
 BuildWin[build_windows_bywin.ps1<br/>Windows桌面应用构建]
 BuildWeb[build_web_bywin.ps1<br/>Web/PWA构建]
 BuildAndroid[build_android_bywin.ps1<br/>Android应用构建]
 end
-subgraph "卸载脚本"
+subgraph "卸载清理脚本"
 RemoveSDK[remove_1_android_sdk_bywin.ps1<br/>Android SDK卸载]
 RemoveRust[remove_2_rust_bywin.ps1<br/>Rust卸载]
 RemoveC[remove_3_c_compile_bywin.ps1<br/>C/C++工具卸载]
 end
+Common --> BaseTools
 Common --> InstallC
+Common --> InstallRust
 Common --> InstallSDK
 Common --> BuildWin
 Common --> BuildWeb
@@ -77,13 +85,21 @@ end
 
 **图表来源**
 - [scripts/windows/_common.ps1:1-1114](file://scripts/windows/_common.ps1#L1-L1114)
-- [scripts/windows/build_web_bywin.ps1:1-255](file://scripts/windows/build_web_bywin.ps1#L1-L255)
+- [scripts/windows/install_1_base_tools_bywin.ps1:1-878](file://scripts/windows/install_1_base_tools_bywin.ps1#L1-L878)
+- [scripts/windows/install_2_c_compile_bywin.ps1:1-431](file://scripts/windows/install_2_c_compile_bywin.ps1#L1-L431)
+- [scripts/windows/install_3_rust_bywin.ps1:1-261](file://scripts/windows/install_3_rust_bywin.ps1#L1-L261)
+- [scripts/windows/install_4_android_sdk_bywin.ps1:1-293](file://scripts/windows/install_4_android_sdk_bywin.ps1#L1-L293)
+- [scripts/windows/build_web_bywin.ps1:1-293](file://scripts/windows/build_web_bywin.ps1#L1-L293)
 - [scripts/windows/build_windows_bywin.ps1:1-229](file://scripts/windows/build_windows_bywin.ps1#L1-L229)
 - [scripts/windows/build_android_bywin.ps1:1-475](file://scripts/windows/build_android_bywin.ps1#L1-L475)
 
 **章节来源**
 - [scripts/windows/_common.ps1:1-1114](file://scripts/windows/_common.ps1#L1-L1114)
-- [scripts/windows/build_web_bywin.ps1:1-255](file://scripts/windows/build_web_bywin.ps1#L1-L255)
+- [scripts/windows/install_1_base_tools_bywin.ps1:1-878](file://scripts/windows/install_1_base_tools_bywin.ps1#L1-L878)
+- [scripts/windows/install_2_c_compile_bywin.ps1:1-431](file://scripts/windows/install_2_c_compile_bywin.ps1#L1-L431)
+- [scripts/windows/install_3_rust_bywin.ps1:1-261](file://scripts/windows/install_3_rust_bywin.ps1#L1-L261)
+- [scripts/windows/install_4_android_sdk_bywin.ps1:1-293](file://scripts/windows/install_4_android_sdk_bywin.ps1#L1-L293)
+- [scripts/windows/build_web_bywin.ps1:1-293](file://scripts/windows/build_web_bywin.ps1#L1-L293)
 - [scripts/windows/build_windows_bywin.ps1:1-229](file://scripts/windows/build_windows_bywin.ps1#L1-L229)
 - [scripts/windows/build_android_bywin.ps1:1-475](file://scripts/windows/build_android_bywin.ps1#L1-L475)
 
@@ -116,9 +132,87 @@ end
 - [scripts/windows/_common.ps1:119-213](file://scripts/windows/_common.ps1#L119-L213)
 - [scripts/windows/_common.ps1:242-341](file://scripts/windows/_common.ps1#L242-L341)
 
-### Web 构建脚本 (build_web_bywin.ps1)
+### 基础工具管理脚本 (install_1_base_tools_bywin.ps1)
 
-**新增** 这是专门为 Windows 平台设计的 Web/PWA 构建脚本，提供了完整的环境检查和构建支持。
+**新增** 该脚本提供了Windows基础工具的完整管理功能，包括winget、Windows终端和Microsoft Store的安装与配置。
+
+#### 核心功能特性
+- **winget管理**: 自动检测、安装和配置winget包管理器
+- **Windows终端**: 支持多种安装方式（GitHub、winget、Microsoft Store）
+- **Microsoft Store**: 系统组件的自动安装与验证
+- **国内镜像源**: 配置USTC、阿里云等镜像源以加速下载
+
+#### 智能安装策略
+- **多源下载**: 优先使用GitHub镜像，失败时回退到官方源
+- **安装包验证**: 下载完成后进行文件大小校验
+- **安装后验证**: 自动检测安装结果并输出详细信息
+
+**章节来源**
+- [scripts/windows/install_1_base_tools_bywin.ps1:47-80](file://scripts/windows/install_1_base_tools_bywin.ps1#L47-L80)
+- [scripts/windows/install_1_base_tools_bywin.ps1:176-259](file://scripts/windows/install_1_base_tools_bywin.ps1#L176-L259)
+- [scripts/windows/install_1_base_tools_bywin.ps1:321-440](file://scripts/windows/install_1_base_tools_bywin.ps1#L321-L440)
+
+### C/C++ 编译器安装脚本
+
+该脚本提供了两种主要的编译器安装路径：
+
+#### MSVC (Visual Studio Build Tools)
+- 通过官方安装器自动安装
+- 支持国内镜像源加速下载
+- 自动配置开发环境
+
+#### GNU (MinGW-w64/MSYS2)
+- 支持国内镜像源（清华、中科大）
+- 自动处理 pacman 密钥环更新
+- 智能锁文件处理机制
+
+**章节来源**
+- [scripts/windows/install_2_c_compile_bywin.ps1:191-232](file://scripts/windows/install_2_c_compile_bywin.ps1#L191-L232)
+- [scripts/windows/install_2_c_compile_bywin.ps1:281-352](file://scripts/windows/install_2_c_compile_bywin.ps1#L281-L352)
+
+### Rust工具链安装脚本 (install_3_rust_bywin.ps1)
+
+**新增** 该脚本提供了Rust工具链的智能安装功能，能够根据C/C++编译环境自动选择合适的ABI。
+
+#### 核心功能特性
+- **智能ABI选择**: 根据MSVC或GNU环境自动选择x86_64-pc-windows-msvc或x86_64-pc-windows-gnu
+- **国内镜像配置**: 自动配置阿里云rustup镜像和crates.io源
+- **工具链管理**: 支持rustup和具体toolchain的安装与配置
+
+#### 高级功能
+- **镜像源配置**: RUSTUP_DIST_SERVER和RUSTUP_UPDATE_ROOT环境变量设置
+- **cargo配置**: 自动创建~/.cargo/config.toml配置文件
+- **路径管理**: 将~/.cargo/bin添加到用户PATH
+
+**章节来源**
+- [scripts/windows/install_3_rust_bywin.ps1:16-42](file://scripts/windows/install_3_rust_bywin.ps1#L16-L42)
+- [scripts/windows/install_3_rust_bywin.ps1:52-85](file://scripts/windows/install_3_rust_bywin.ps1#L52-L85)
+- [scripts/windows/install_3_rust_bywin.ps1:98-129](file://scripts/windows/install_3_rust_bywin.ps1#L98-L129)
+
+### Android SDK安装脚本 (install_4_android_sdk_bywin.ps1)
+
+**新增** 该脚本提供了完整的Android开发环境安装解决方案：
+
+#### 核心功能
+- **SDKManager引导安装**: 自动下载和安装命令行工具
+- **Java 环境检查**: 确保 Java 17 正确配置
+- **组件安装**: 平台工具、NDK、平台和构建工具
+- **Rust 交叉编译支持**: 自动安装 Android 目标
+- **环境变量配置**: 用户级和当前会话环境变量设置
+
+#### 智能检测机制
+- 多种 SDK 根目录定位策略
+- 自动版本推导和验证
+- 组件完整性检查
+
+**章节来源**
+- [scripts/windows/install_4_android_sdk_bywin.ps1:35-92](file://scripts/windows/install_4_android_sdk_bywin.ps1#L35-L92)
+- [scripts/windows/install_4_android_sdk_bywin.ps1:127-150](file://scripts/windows/install_4_android_sdk_bywin.ps1#L127-L150)
+- [scripts/windows/install_4_android_sdk_bywin.ps1:189-293](file://scripts/windows/install_4_android_sdk_bywin.ps1#L189-L293)
+
+### Web构建脚本 (build_web_bywin.ps1)
+
+**更新** 这是专门为 Windows 平台设计的 Web/PWA 构建脚本，提供了完整的环境检查和构建支持。
 
 #### 核心功能特性
 - **三种操作模式**:
@@ -144,48 +238,9 @@ end
 - [scripts/windows/build_web_bywin.ps1:74-84](file://scripts/windows/build_web_bywin.ps1#L74-L84)
 - [scripts/windows/build_web_bywin.ps1:97-124](file://scripts/windows/build_web_bywin.ps1#L97-L124)
 
-### C/C++ 编译器安装脚本
+### Windows桌面应用构建脚本 (build_windows_bywin.ps1)
 
-该脚本提供了两种主要的编译器安装路径：
-
-#### MSVC (Visual Studio Build Tools)
-- 通过官方安装器自动安装
-- 支持国内镜像源加速下载
-- 自动配置开发环境
-
-#### GNU (MinGW-w64/MSYS2)
-- 支持国内镜像源（清华、中科大）
-- 自动处理 pacman 密钥环更新
-- 智能锁文件处理机制
-
-**章节来源**
-- [scripts/windows/install_2_c_compile_bywin.ps1:191-232](file://scripts/windows/install_2_c_compile_bywin.ps1#L191-L232)
-- [scripts/windows/install_2_c_compile_bywin.ps1:281-352](file://scripts/windows/install_2_c_compile_bywin.ps1#L281-L352)
-
-### Android SDK 安装脚本
-
-专为 Android 开发环境设计的完整安装解决方案：
-
-#### 核心功能
-- **SDKManager 引导安装**: 自动下载和安装命令行工具
-- **Java 环境检查**: 确保 Java 17 正确配置
-- **组件安装**: 平台工具、NDK、平台和构建工具
-- **Rust 交叉编译支持**: 自动安装 Android 目标
-- **环境变量配置**: 用户级和当前会话环境变量设置
-
-#### 智能检测机制
-- 多种 SDK 根目录定位策略
-- 自动版本推导和验证
-- 组件完整性检查
-
-**章节来源**
-- [scripts/windows/install_4_android_sdk_bywin.ps1:35-92](file://scripts/windows/install_4_android_sdk_bywin.ps1#L35-L92)
-- [scripts/windows/install_4_android_sdk_bywin.ps1:127-150](file://scripts/windows/install_4_android_sdk_bywin.ps1#L127-L150)
-- [scripts/windows/install_4_android_sdk_bywin.ps1:189-293](file://scripts/windows/install_4_android_sdk_bywin.ps1#L189-L293)
-
-### Windows 桌面应用构建脚本
-
-集成 Tauri 框架的 Windows 应用构建自动化：
+**更新** 集成 Tauri 框架的 Windows 应用构建自动化：
 
 #### 构建流程
 1. **环境检查**: C/C++ 编译器、Rust 工具链、pnpm、WebView2 Runtime
@@ -202,7 +257,7 @@ end
 - [scripts/windows/build_windows_bywin.ps1:45-76](file://scripts/windows/build_windows_bywin.ps1#L45-L76)
 - [scripts/windows/build_windows_bywin.ps1:141-229](file://scripts/windows/build_windows_bywin.ps1#L141-L229)
 
-### Android 应用构建脚本
+### Android应用构建脚本 (build_android_bywin.ps1)
 
 **更新** 该脚本提供了完整的 Android 应用构建支持，包括环境检查、项目重建和签名配置。
 
@@ -238,13 +293,18 @@ Install[安装流程]
 Uninstall[卸载流程]
 Build[构建流程]
 WebBuild[Web构建流程]
+BaseTools[基础工具管理]
+AndroidSetup[Android环境配置]
+RustSetup[Rust工具链管理]
+CCompiler[C/C++编译器安装]
 end
 subgraph "基础设施层"
 Common[通用函数库]
 Helpers[辅助工具]
 Download[下载引擎]
 Registry[注册表操作]
-end
+Mirror[镜像源配置]
+End
 subgraph "外部系统集成"
 VS[Visual Studio]
 MSYS2[MSYS2/Pacman]
@@ -254,41 +314,67 @@ WebView2[WebView2 Runtime]
 NodeJS[Node.js]
 NPM[npm]
 Ionic[Ionic CLI]
+Winget[Winget包管理器]
+WindowsTerminal[Windows终端]
+MicrosoftStore[Microsoft Store]
 end
 CLI --> EnvCheck
 CLI --> Install
 CLI --> Uninstall
 CLI --> Build
 CLI --> WebBuild
+CLI --> BaseTools
+CLI --> AndroidSetup
+CLI --> RustSetup
+CLI --> CCompiler
 EnvCheck --> Common
 Install --> Common
 Uninstall --> Common
 Build --> Common
 WebBuild --> Common
+BaseTools --> Common
+AndroidSetup --> Common
+RustSetup --> Common
+CCompiler --> Common
 Common --> Helpers
 Common --> Download
 Common --> Registry
+Common --> Mirror
 Install --> VS
 Install --> MSYS2
 Install --> AndroidSDK
 Install --> Rust
 Install --> NodeJS
 Install --> NPM
+Install --> Winget
+Install --> WindowsTerminal
+Install --> MicrosoftStore
 Build --> WebView2
 WebBuild --> Ionic
 WebBuild --> NodeJS
 WebBuild --> NPM
+AndroidSetup --> AndroidSDK
+AndroidSetup --> Rust
+AndroidSetup --> Java
+RustSetup --> Rust
+RustSetup --> Cargo
+CCompiler --> VS
+CCompiler --> MSYS2
 ```
 
 **图表来源**
 - [scripts/windows/_common.ps1:1-1114](file://scripts/windows/_common.ps1#L1-L1114)
-- [scripts/windows/build_web_bywin.ps1:1-255](file://scripts/windows/build_web_bywin.ps1#L1-L255)
+- [scripts/windows/install_1_base_tools_bywin.ps1:1-878](file://scripts/windows/install_1_base_tools_bywin.ps1#L1-L878)
+- [scripts/windows/install_2_c_compile_bywin.ps1:1-431](file://scripts/windows/install_2_c_compile_bywin.ps1#L1-L431)
+- [scripts/windows/install_3_rust_bywin.ps1:1-261](file://scripts/windows/install_3_rust_bywin.ps1#L1-L261)
+- [scripts/windows/install_4_android_sdk_bywin.ps1:1-293](file://scripts/windows/install_4_android_sdk_bywin.ps1#L1-L293)
+- [scripts/windows/build_web_bywin.ps1:1-293](file://scripts/windows/build_web_bywin.ps1#L1-L293)
 - [scripts/windows/build_windows_bywin.ps1:1-229](file://scripts/windows/build_windows_bywin.ps1#L1-L229)
 - [scripts/windows/build_android_bywin.ps1:1-475](file://scripts/windows/build_android_bywin.ps1#L1-L475)
 
 ## 详细组件分析
 
-### Web 构建流程详细分析
+### Web构建流程详细分析
 
 ```mermaid
 sequenceDiagram
@@ -326,34 +412,30 @@ end
 - [scripts/windows/build_web_bywin.ps1:169-184](file://scripts/windows/build_web_bywin.ps1#L169-L184)
 - [scripts/windows/build_web_bywin.ps1:190-206](file://scripts/windows/build_web_bywin.ps1#L190-L206)
 
-### 环境检查与验证流程
+### 基础工具管理流程
 
 ```mermaid
-sequenceDiagram
-participant User as 用户
-participant Script as 构建脚本
-participant Common as 通用函数
-participant System as 系统组件
-User->>Script : 执行 build_windows_bywin.ps1
-Script->>Common : 启用自动确认模式
-Script->>System : 检测 C/C++ 编译器
-System-->>Script : 返回检测结果
-Script->>System : 检测 Rust 工具链
-System-->>Script : 返回检测结果
-Script->>System : 检测 pnpm
-System-->>Script : 返回检测结果
-Script->>System : 检测 WebView2 Runtime
-System-->>Script : 返回检测结果
-Script->>Common : 输出环境摘要
-Script->>User : 显示检查结果
-Note over Script,System : 所有检查通过后进入构建准备阶段
+flowchart TD
+Start([开始基础工具管理]) --> CheckTools[检测现有工具]
+CheckTools --> ShowMenu[显示可用工具菜单]
+ShowMenu --> SelectTools{用户选择?}
+SelectTools --> |安装工具| InstallProcess[执行安装流程]
+SelectTools --> |卸载工具| UninstallProcess[执行卸载流程]
+InstallProcess --> InstallWinget[安装winget]
+InstallWinget --> ConfigureMirror[配置镜像源]
+ConfigureMirror --> InstallTerminal[安装Windows终端]
+InstallTerminal --> InstallStore[安装Microsoft Store]
+InstallStore --> Complete([安装完成])
+UninstallProcess --> UninstallTerminal[卸载Windows终端]
+UninstallTerminal --> Complete
+CheckTools --> ShowMenu
 ```
 
 **图表来源**
-- [scripts/windows/build_windows_bywin.ps1:45-133](file://scripts/windows/build_windows_bywin.ps1#L45-L133)
-- [scripts/windows/_common.ps1:119-166](file://scripts/windows/_common.ps1#L119-L166)
+- [scripts/windows/install_1_base_tools_bywin.ps1:728-731](file://scripts/windows/install_1_base_tools_bywin.ps1#L728-L731)
+- [scripts/windows/install_1_base_tools_bywin.ps1:781-800](file://scripts/windows/install_1_base_tools_bywin.ps1#L781-L800)
 
-### Android SDK 安装详细流程
+### Android SDK安装详细流程
 
 ```mermaid
 flowchart TD
@@ -409,7 +491,7 @@ StatusReport --> End([卸载完成])
 - [scripts/windows/remove_3_c_compile_bywin.ps1:24-95](file://scripts/windows/remove_3_c_compile_bywin.ps1#L24-L95)
 
 **章节来源**
-- [scripts/windows/build_web_bywin.ps1:1-255](file://scripts/windows/build_web_bywin.ps1#L1-L255)
+- [scripts/windows/build_web_bywin.ps1:1-293](file://scripts/windows/build_web_bywin.ps1#L1-L293)
 - [scripts/windows/install_4_android_sdk_bywin.ps1:1-293](file://scripts/windows/install_4_android_sdk_bywin.ps1#L1-L293)
 - [scripts/windows/remove_1_android_sdk_bywin.ps1:1-225](file://scripts/windows/remove_1_android_sdk_bywin.ps1#L1-L225)
 - [scripts/windows/remove_2_rust_bywin.ps1:1-85](file://scripts/windows/remove_2_rust_bywin.ps1#L1-L85)
@@ -424,21 +506,27 @@ graph LR
 subgraph "共享依赖"
 Common[_common.ps1]
 end
-subgraph "安装脚本"
+subgraph "基础工具管理"
+BaseTools[install_1_base_tools_bywin.ps1]
+end
+subgraph "编译环境安装"
 InstallC[install_2_c_compile_bywin.ps1]
+InstallRust[install_3_rust_bywin.ps1]
 InstallSDK[install_4_android_sdk_bywin.ps1]
 end
-subgraph "构建脚本"
+subgraph "应用构建脚本"
 BuildWin[build_windows_bywin.ps1]
 BuildWeb[build_web_bywin.ps1]
 BuildAndroid[build_android_bywin.ps1]
 end
-subgraph "卸载脚本"
+subgraph "卸载清理脚本"
 RemoveSDK[remove_1_android_sdk_bywin.ps1]
 RemoveRust[remove_2_rust_bywin.ps1]
 RemoveC[remove_3_c_compile_bywin.ps1]
 end
+Common --> BaseTools
 Common --> InstallC
+Common --> InstallRust
 Common --> InstallSDK
 Common --> BuildWin
 Common --> BuildWeb
@@ -448,14 +536,27 @@ Common --> RemoveRust
 Common --> RemoveC
 InstallC --> BuildWin
 InstallC --> BuildAndroid
+InstallRust --> BuildWin
+InstallRust --> BuildAndroid
 InstallSDK --> BuildAndroid
 RemoveSDK --> BuildWin
 RemoveSDK --> BuildWeb
 RemoveSDK --> BuildAndroid
+RemoveRust --> BuildWin
+RemoveRust --> BuildAndroid
+RemoveC --> BuildWin
+RemoveC --> BuildAndroid
+BaseTools --> InstallC
+BaseTools --> InstallRust
+BaseTools --> InstallSDK
 ```
 
 **图表来源**
 - [scripts/windows/_common.ps1:24-33](file://scripts/windows/_common.ps1#L24-L33)
+- [scripts/windows/install_1_base_tools_bywin.ps1:686-695](file://scripts/windows/install_1_base_tools_bywin.ps1#L686-L695)
+- [scripts/windows/install_2_c_compile_bywin.ps1:24-26](file://scripts/windows/install_2_c_compile_bywin.ps1#L24-L26)
+- [scripts/windows/install_3_rust_bywin.ps1:12-14](file://scripts/windows/install_3_rust_bywin.ps1#L12-L14)
+- [scripts/windows/install_4_android_sdk_bywin.ps1:7-9](file://scripts/windows/install_4_android_sdk_bywin.ps1#L7-L9)
 - [scripts/windows/build_web_bywin.ps1:27-29](file://scripts/windows/build_web_bywin.ps1#L27-L29)
 - [scripts/windows/build_windows_bywin.ps1:27-29](file://scripts/windows/build_windows_bywin.ps1#L27-L29)
 - [scripts/windows/build_android_bywin.ps1:27-29](file://scripts/windows/build_android_bywin.ps1#L27-L29)
@@ -480,9 +581,9 @@ RemoveSDK --> BuildAndroid
 - **Ionic CLI**: Web 应用构建工具
 
 #### 网络资源
-- **国内镜像源**: 清华大学、中科大
+- **国内镜像源**: 清华大学、中科大、阿里云
 - **GitHub**: 原始下载源
-- **官方下载站**: 各组件官方源
+- **Microsoft Store**: 系统组件下载站
 
 **章节来源**
 - [scripts/windows/build_web_bywin.ps1:35-66](file://scripts/windows/build_web_bywin.ps1#L35-L66)
@@ -505,11 +606,11 @@ Windows 平台上的 Rust 构建经常遇到内存不足的问题，脚本系统
 - **代码生成单元**: 增加到 256 (`CARGO_PROFILE_RELEASE_CODEGEN_UNITS=256`)
 - **链接时优化**: 禁用 LTO (`CARGO_PROFILE_RELEASE_LTO=false`)
 
-### Web 构建性能优化
+### Web构建性能优化
 
 **新增** Web 构建脚本特别针对 Angular 19 的性能要求进行了优化：
 
-#### ajv 版本冲突自动修复
+#### ajv版本冲突自动修复
 - **版本检测**: 自动检测 node_modules/ajv 的版本
 - **智能修复**: 当检测到 v6 被提升到顶层时自动修复
 - **命令执行**: 使用 `npm install ajv@^8.20.0 --legacy-peer-deps`
@@ -545,7 +646,7 @@ Test-Gnu
 Test-RustToolchain
 ```
 
-#### Web 构建问题
+#### Web构建问题
 **新增** 针对 Web 构建的特定故障排除：
 
 ```powershell
@@ -561,6 +662,20 @@ npm install ajv@^8.20.0 --legacy-peer-deps
 # 清理 node_modules 并重新安装
 rm -rf node_modules
 npm install --legacy-peer-deps
+```
+
+#### 基础工具安装问题
+**新增** 针对基础工具管理的故障排除：
+
+```powershell
+# 检查 winget 安装状态
+Test-Winget
+
+# 检查 Windows 终端安装状态
+Test-WindowsTerminal
+
+# 检查 Microsoft Store 安装状态
+Test-MicrosoftStore
 ```
 
 #### 下载问题
@@ -603,6 +718,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 **章节来源**
 - [scripts/windows/build_web_bywin.ps1:127-137](file://scripts/windows/build_web_bywin.ps1#L127-L137)
+- [scripts/windows/install_1_base_tools_bywin.ps1:728-731](file://scripts/windows/install_1_base_tools_bywin.ps1#L728-L731)
 - [scripts/windows/remove_1_android_sdk_bywin.ps1:26-37](file://scripts/windows/remove_1_android_sdk_bywin.ps1#L26-L37)
 - [scripts/windows/remove_2_rust_bywin.ps1:40-54](file://scripts/windows/remove_2_rust_bywin.ps1#L40-L54)
 - [scripts/windows/remove_3_c_compile_bywin.ps1:32-53](file://scripts/windows/remove_3_c_compile_bywin.ps1#L32-L53)
@@ -611,7 +727,7 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
 Macro Deck Client App 的 Windows PowerShell 自动化系统展现了现代开发工具链的最佳实践。通过精心设计的模块化架构、完善的错误处理机制和智能化的用户交互体验，这套脚本系统为开发者提供了高效、可靠的开发环境管理解决方案。
 
-**更新** 新增的 Web 构建脚本 `build_web_bywin.ps1` 进一步完善了整个自动化系统，为 Windows 平台提供了完整的 Web/PWA 构建支持。该脚本不仅具备了完整的环境检查和构建功能，还特别针对 Angular 19 的严格要求和常见的 ajv 版本冲突问题提供了智能解决方案。
+**重大现代化升级** 新增的六个专门PowerShell构建脚本进一步完善了整个自动化系统，形成了从基础工具安装到复杂应用构建的完整解决方案。包括基础工具管理脚本、C/C++编译器安装脚本、Rust工具链安装脚本、Android SDK安装脚本以及完整的构建脚本，为Windows平台提供了从桌面应用到Web应用、从Android应用到iOS应用的一站式自动化解决方案。
 
 ### 主要优势
 
@@ -630,4 +746,4 @@ Macro Deck Client App 的 Windows PowerShell 自动化系统展现了现代开�
 - **安全考虑**: 完整的卸载和清理机制
 - **版本兼容**: 智能处理不同框架版本的兼容性问题
 
-这套 PowerShell 自动化系统不仅提高了开发效率，更为项目的长期维护奠定了坚实的基础，是现代跨平台开发项目的优秀范例。新增的 Web 构建脚本进一步增强了系统的完整性和实用性，为开发者提供了从桌面应用到 Web 应用的一站式自动化解决方案。
+这套 PowerShell 自动化系统不仅提高了开发效率，更为项目的长期维护奠定了坚实的基础，是现代跨平台开发项目的优秀范例。新增的完整脚本生态系统进一步增强了系统的实用性和完整性，为开发者提供了从环境搭建到应用发布的全流程自动化解决方案。
