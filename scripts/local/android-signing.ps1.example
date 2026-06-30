@@ -1,0 +1,15 @@
+# Copy this file to scripts\local\android-signing.ps1 and fill in local secrets.
+# It is dot-sourced by scripts\windows.bak\build_android_bywin.ps1 (PowerShell syntax).
+# Do not commit the real android-signing.ps1 or any keystore password to git.
+
+$env:KEYSTORE_FILE_PASSWORD = "your_keystore_password"
+
+# Optional overrides (defaults come from android\app\build.gradle and the paths below):
+# $env:BUILD_NUMBER = "3001"
+# $env:VERSION_NUMBER = "3.0.0"
+# $env:KEYSTORE_FILE_PATH = "$env:USERPROFILE\keystore\macro-deck-client-keystore.jks"
+# $env:KEYSTORE_FILE_ALIAS = "macro-deck-client"
+
+# No keystore yet? Create the default one first:
+#   keytool -genkey -v -keystore "$env:USERPROFILE\keystore\macro-deck-client-keystore.jks" `
+#     -keyalg RSA -keysize 2048 -validity 10000 -alias macro-deck-client
