@@ -2,9 +2,6 @@ name: CI
 
 on:
   workflow_call:
-  push:
-    tags:
-      - '*'
   release:
     types:
       - published
@@ -24,3 +21,29 @@ jobs:
     with:
       version: ${{ needs.determine-version.outputs.version }}
       base-build-artifact-name: ${{ needs.base-build.outputs.artifact_name }}
+
+  attach-android-artifacts-to-release:
+    if: github.event_name == 'release'
+    needs: android-build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download Android build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.android-build.outputs.artifact_name }}
+          path: release-artifacts
+      - name: Rename Android artifacts
+        run: |
+          mv release-artifacts/apk/release/app-release.apk release-artifacts/macro-deck-client-android.apk
+          mv release-artifacts/bundle/release/app-release.aab release-artifacts/macro-deck-client-android.aab
+      - name: Attach Android artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name || github.ref_name }}
+          files: |
+            release-artifacts/macro-deck-client-android.apk
+            release-artifacts/macro-deck-client-android.aab
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
