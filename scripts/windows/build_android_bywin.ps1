@@ -106,6 +106,7 @@ Write-Banner '构建 Android release'
 Load-AndroidSigningPs1 -FilePath $signingFile
 
 $ready = $true
+if (-not (Assert-JavaForAndroid)) { $ready = $false }
 if (-not (Require-AndroidReleaseEnv)) { $ready = $false }
 if (-not (Require-Command 'npx')) { $ready = $false }
 if (-not (Require-Fastlane)) { $ready = $false }

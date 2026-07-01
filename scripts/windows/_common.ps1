@@ -816,6 +816,44 @@ function Assert-Java17 {
   return $true
 }
 
+<#
+.SYNOPSIS
+  断言 Java 主版本落在 [Min, Max] 区间（Android 构建对 JDK 有上下限要求）。
+.PARAMETER Min
+  允许的最低主版本，默认 17。
+.PARAMETER Max
+  允许的最高主版本，默认 21。
+.OUTPUTS
+  [bool] 落在区间返回 $true；否则输出失败提示并返回 $false。
+.NOTES
+  本项目实测：Capacitor 7 的 capacitor-android 要求 sourceCompatibility VERSION_21，
+  Gradle 8.13 官方支持 JDK 17-21。JDK 22+（含 25）会报
+  “Unsupported class file major version”；低于 21 会报“无效的源发行版: 21”。
+  故 Android 构建推荐 JDK 21。仅校验与输出，是否 exit 由调用方决定。
+#>
+function Assert-JavaForAndroid {
+  param([int]$Min = 17, [int]$Max = 21)
+  $ver = Get-JavaMajorVersion
+  $hint = "Android 构建需要 JDK $Min-$Max（推荐 21）。请用 jvms 切换：jvms use 21，或从 https://adoptium.net/ 安装 JDK 21。"
+  if ($null -eq $ver) {
+    Write-Fail "未找到 Java，需要 JDK $Min-$Max（推荐 21）"
+    Write-Fail $hint
+    return $false
+  }
+  if ($ver -lt $Min) {
+    Write-Fail "检测到 Java $ver，版本过低；Android 构建需要 JDK $Min-$Max（推荐 21）"
+    Write-Fail $hint
+    return $false
+  }
+  if ($ver -gt $Max) {
+    Write-Fail "检测到 Java $ver，版本过高；Gradle 8.13 仅支持到 JDK $Max（推荐 21）"
+    Write-Fail $hint
+    return $false
+  }
+  Write-Ok "Java $ver 已安装：$(Get-ExePath 'java.exe')"
+  return $true
+}
+
 # ─── Misc helpers ────────────────────────────────────────────────────────────
 <#
 .SYNOPSIS
