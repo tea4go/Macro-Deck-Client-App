@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: android
-title: Capacitor Android 应用壳与自动化发布
+title: Android 原生壳与自动化发布
 scope:
     - android/
 source_files: []

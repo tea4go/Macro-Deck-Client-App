@@ -3,7 +3,7 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-06-30T17:06:30Z"
+exported_at: "2026-07-01T04:22:18Z"
 modules:
     "":
         dir_name: Macro Deck 跨平台客户端编排中心
@@ -351,8 +351,8 @@ modules:
         depends_on: []
         related_to: []
     android:
-        dir_name: Capacitor Android 应用壳与自动化发布
-        title: Capacitor Android 应用壳与自动化发布
+        dir_name: Android 原生壳与自动化发布
+        title: Android 原生壳与自动化发布
         scope:
             - android/
         source_files: []
@@ -476,8 +476,8 @@ modules:
         depends_on: []
         related_to: []
     scripts:
-        dir_name: 跨平台构建与运行自动化脚本
-        title: 跨平台构建与运行自动化脚本
+        dir_name: 跨平台构建与环境自动化
+        title: 跨平台构建与环境自动化
         scope:
             - scripts/
         source_files: []
