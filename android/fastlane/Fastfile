@@ -33,6 +33,19 @@ lane :build do
       }
     )
 
+    # 规范化 AAB 文件名为 MacroDeckClient-<版本名>-<版本号>.aab（与 APK 命名一致）。
+    # AAB 不能像 APK 那样在 build.gradle 用 outputFileName 改名（那是 APK variant 专有），
+    # 且 archivesName 会连带影响 APK，故在此构建后重命名最干净。
+    # 用 gradle action 回填的 GRADLE_AAB_OUTPUT_PATH 拿 AAB 绝对路径（不依赖当前工作目录）。
+    aab_src = lane_context[SharedValues::GRADLE_AAB_OUTPUT_PATH]
+    if aab_src && File.exist?(aab_src)
+      aab_dst = File.join(File.dirname(aab_src), "MacroDeckClient-#{ENV['VERSION_NUMBER']}-#{ENV['BUILD_NUMBER']}.aab")
+      FileUtils.mv(aab_src, aab_dst, force: true)
+      UI.success("AAB 已重命名：#{aab_dst}")
+    else
+      UI.important("未找到 AAB 输出路径，跳过重命名（GRADLE_AAB_OUTPUT_PATH=#{aab_src.inspect}）")
+    end
+
     gradle(
       task: "assemble",
       build_type: "Release",
@@ -45,11 +58,23 @@ lane :build do
     )
 end
 
+# 上传到 Google Play（草稿状态）。
+# 前置条件（缺一不可，凑齐后才能用）：
+#   1. Google Play 服务账号 JSON 密钥：在 Google Cloud Console 建服务账号，
+#      在 Play Console 授权，把 JSON 内容放进环境变量 PLAYSTORE_CREDENTIALS
+#      （或改用 json_key: "path/to/key.json" 指向文件）。
+#   2. app 已在 Play Console 创建，且首个版本必须先手动上传一次
+#      （Google 规定第一个版本不能通过 API 提交）。
+# 用法示例（PowerShell）：
+#   $env:VERSION_NUMBER="3.0.0"; $env:BUILD_NUMBER="1"
+#   $env:PLAYSTORE_CREDENTIALS = Get-Content path\to\service-account.json -Raw
+#   bundle exec fastlane release
 lane :release do
+  aab_path = "app/build/outputs/bundle/release/MacroDeckClient-#{ENV['VERSION_NUMBER']}-#{ENV['BUILD_NUMBER']}.aab"
   upload_to_play_store(
     skip_upload_metadata: true,
     release_status: 'draft',
-    aab: 'app/build/outputs/bundle/release/app-release.aab',
+    aab: aab_path,
     json_key_data: ENV["PLAYSTORE_CREDENTIALS"]
   )
 end
