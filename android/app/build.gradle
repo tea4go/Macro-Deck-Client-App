@@ -28,6 +28,16 @@ android {
     dataBinding {
         enabled = true
     }
+
+    // 规范化 release APK 文件名：MacroDeckClient-<versionName>-<versionCode>.apk
+    // 用 variant 的运行时版本值（fastlane 会先 increment_version 改 versionCode/Name，故不能硬编码）
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def vName = variant.versionName
+            def vCode = variant.versionCode
+            outputFileName = "MacroDeckClient-${vName}-${vCode}.apk"
+        }
+    }
 }
 
 repositories {
