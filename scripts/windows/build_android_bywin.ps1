@@ -70,7 +70,17 @@ Windows 推荐方式：
 #>
 function Require-AndroidReleaseEnv {
   if ([string]::IsNullOrWhiteSpace($env:BUILD_NUMBER)) {
-    $env:BUILD_NUMBER = Read-AndroidGradleValue 'versionCode'
+    # 未显式指定 BUILD_NUMBER 时，读 build.gradle 当前 versionCode 再 +1 自动递增。
+    # （versionCode 每次发布必须递增；fastlane 随后会把新值写回 build.gradle 持久化。）
+    $currentCode = Read-AndroidGradleValue 'versionCode'
+    $parsed = 0
+    if ([int]::TryParse($currentCode, [ref]$parsed)) {
+      $env:BUILD_NUMBER = ($parsed + 1).ToString()
+      Write-Ok "versionCode 自动递增：$currentCode -> $env:BUILD_NUMBER"
+    } else {
+      Write-Warn "无法解析当前 versionCode（'$currentCode'），BUILD_NUMBER 回退为 1"
+      $env:BUILD_NUMBER = '1'
+    }
   }
   if ([string]::IsNullOrWhiteSpace($env:VERSION_NUMBER)) {
     $env:VERSION_NUMBER = Read-AndroidGradleValue 'versionName'
