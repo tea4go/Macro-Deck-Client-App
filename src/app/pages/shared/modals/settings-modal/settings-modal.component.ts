@@ -12,6 +12,8 @@ import {FormsModule} from "@angular/forms";
 import {TranslatePipe, TranslateService} from "@ngx-translate/core";
 import {I18nService} from "../../../../services/i18n/i18n.service";
 import {LanguageType} from "../../../../enums/language-type";
+import {UpdateService} from "../../../../services/update/update.service";
+import {UpdateModalComponent} from "../update-modal/update-modal.component";
 
 /** 设置弹窗组件，提供应用各项配置的界面交互 */
 @Component({
@@ -62,7 +64,30 @@ export class SettingsModalComponent  implements OnInit {
               public diagnosticService: DiagnosticService,
               private themeService: ThemeService,
               private i18nService: I18nService,
-              private translate: TranslateService) { }
+              private translate: TranslateService,
+              private updateService: UpdateService) { }
+
+  /**
+   * 手动检查更新：有新版本弹更新弹窗，已是最新则提示。
+   * 仅 Android 有效。
+   */
+  async checkForUpdate() {
+    const info = await this.updateService.checkForUpdate(false);
+    if (info.hasUpdate) {
+      const modal = await this.modalController.create({
+        component: UpdateModalComponent,
+        componentProps: { info }
+      });
+      await modal.present();
+    } else {
+      const alert = await this.alertController.create({
+        header: this.translate.instant('update.checkForUpdate'),
+        message: this.translate.instant('update.alreadyLatest'),
+        buttons: [this.translate.instant('common.ok')]
+      });
+      await alert.present();
+    }
+  }
 
   /**
    * 组件初始化回调

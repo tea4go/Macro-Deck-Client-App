@@ -128,5 +128,19 @@
     "connectingTo": "正在连接到 {{name}}...",
     "connectingToMacroDeck": "正在连接到 Macro Deck...",
     "connectingViaUsb": "正在通过 USB 连接..."
+  },
+  "update": {
+    "checkForUpdate": "检查更新",
+    "newVersionFound": "发现新版本",
+    "newVersionTitle": "有新版本 {{version}} 可用",
+    "currentVersion": "当前",
+    "releaseNotes": "更新内容",
+    "updateNow": "立即更新",
+    "later": "稍后",
+    "skipThisVersion": "跳过此版本",
+    "downloading": "正在下载更新...",
+    "alreadyLatest": "已经是最新版本。",
+    "downloadFailedTitle": "更新失败",
+    "downloadFailedMessage": "无法下载更新，请检查网络后重试。"
   }
 }

@@ -20,6 +20,7 @@ const usbPortKey: string = "usb_port";
 const usbUseSslKey: string = "usb_use_ssl";
 const buttonWidgetBorderStyleKey: string = "button_widget_border_style";
 const languageKey: string = "language";
+const skippedUpdateVersionKey: string = "skipped_update_version";
 
 /** 设置服务，管理应用各项配置的持久化存取 */
 @Injectable({
@@ -29,6 +30,22 @@ export class SettingsService {
 
 
   constructor(private storage: Storage) {
+  }
+
+  /**
+   * 设置用户选择「跳过」的更新版本号（versionCode）
+   * @param versionCode 被跳过的版本的 versionCode
+   */
+  public async setSkippedVersion(versionCode: number) {
+    await this.storage.set(skippedUpdateVersionKey, versionCode);
+  }
+
+  /**
+   * 获取用户已跳过的更新版本号（versionCode）
+   * @returns 已跳过的 versionCode，默认 0（表示未跳过任何版本）
+   */
+  public async getSkippedVersion(): Promise<number> {
+    return await this.storage.get(skippedUpdateVersionKey) ?? 0;
   }
 
   /**

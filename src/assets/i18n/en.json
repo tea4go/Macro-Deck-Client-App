@@ -128,5 +128,19 @@
     "connectingTo": "Connecting to {{name}}...",
     "connectingToMacroDeck": "Connecting to Macro Deck...",
     "connectingViaUsb": "Connecting via USB..."
+  },
+  "update": {
+    "checkForUpdate": "Check for updates",
+    "newVersionFound": "New version available",
+    "newVersionTitle": "Version {{version}} is available",
+    "currentVersion": "Current",
+    "releaseNotes": "What's new",
+    "updateNow": "Update now",
+    "later": "Later",
+    "skipThisVersion": "Skip this version",
+    "downloading": "Downloading update...",
+    "alreadyLatest": "You're already on the latest version.",
+    "downloadFailedTitle": "Update failed",
+    "downloadFailedMessage": "Could not download the update. Please check your network and try again."
   }
 }

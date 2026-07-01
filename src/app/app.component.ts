@@ -12,8 +12,10 @@ import {WebHomePage} from "./pages/web-home/web-home.page";
 import {App, URLOpenListenerEvent} from "@capacitor/app";
 import {QuickSetupQrCodeData} from "./datatypes/quick-setup-qr-code-data";
 import {QrCodeScannerComponent} from "./pages/home/modals/add-connection/qr-code-scanner/qr-code-scanner.component";
-import {IonicModule} from "@ionic/angular";
+import {IonicModule, ModalController} from "@ionic/angular";
 import {I18nService} from "./services/i18n/i18n.service";
+import {UpdateService} from "./services/update/update.service";
+import {UpdateModalComponent} from "./pages/shared/modals/update-modal/update-modal.component";
 
 /** 应用根组件，负责初始化各项服务并监听深度链接 */
 @Component({
@@ -34,7 +36,9 @@ export class AppComponent implements OnInit {
               private settingsService: SettingsService,
               private diagnosticService: DiagnosticService,
               private themeService: ThemeService,
-              private i18nService: I18nService) {
+              private i18nService: I18nService,
+              private updateService: UpdateService,
+              private modalController: ModalController) {
   }
 
   /** 根页面组件，Web 版本使用 WebHomePage，原生版本使用 HomePage */
@@ -67,5 +71,27 @@ export class AppComponent implements OnInit {
         AppComponent.quickSetupLinkScanned.emit(data);
       }
     });
+
+    // 启动时静默检查更新（仅 Android，不阻塞启动）
+    this.checkForUpdate();
+  }
+
+  /**
+   * 检查应用更新：有新版本且未被跳过时弹出更新提示弹窗。
+   * 静默执行——失败或无更新不打扰用户。
+   */
+  private async checkForUpdate() {
+    try {
+      const info = await this.updateService.checkForUpdate(true);
+      if (await this.updateService.shouldPrompt(info)) {
+        const modal = await this.modalController.create({
+          component: UpdateModalComponent,
+          componentProps: { info }
+        });
+        await modal.present();
+      }
+    } catch {
+      // 静默：检查更新失败不影响正常使用
+    }
   }
 }
