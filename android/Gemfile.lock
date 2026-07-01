@@ -130,7 +130,6 @@ GEM
     fastlane-plugin-increment_version_code (0.4.3)
     fastlane-plugin-increment_version_name (0.0.10)
     fastlane-sirp (1.1.0)
-    fiddle (1.1.8)
     gh_inspector (1.1.3)
     google-apis-androidpublisher_v3 (0.104.0)
       google-apis-core (>= 0.15.0, < 2.a)
@@ -250,7 +249,6 @@ DEPENDENCIES
   fastlane-plugin-firebase_app_distribution
   fastlane-plugin-increment_version_code
   fastlane-plugin-increment_version_name
-  fiddle
 
 CHECKSUMS
   CFPropertyList (3.0.8) sha256=2c99d0d980536d3d7ab252f7bd59ac8be50fbdd1ff487c98c949bb66bb114261
@@ -298,7 +296,6 @@ CHECKSUMS
   fastlane-plugin-increment_version_code (0.4.3) sha256=b3d0c12875614902ba3dd6ec291ffd2f4ba3889490491cb65e1efc9cc6b4039a
   fastlane-plugin-increment_version_name (0.0.10) sha256=164bb5f97bb16042c1eba2d7f94cac0152af5aca577b721b55e8b2dcbdb01537
   fastlane-sirp (1.1.0) sha256=10bc94f9682efd8e1badfb31452a76dd8981f1f3a33717c765fde6d75b54d847
-  fiddle (1.1.8) sha256=7fa8ee3627271497f3add5503acdbc3f40b32f610fc1cf49634f083ef3f32eee
   gh_inspector (1.1.3) sha256=04cca7171b87164e053aa43147971d3b7f500fcb58177698886b48a9fc4a1939
   google-apis-androidpublisher_v3 (0.104.0) sha256=3bf7f0dee23ae71e070e279848374834853204e304831cf6aa76fa435a4d6eff
   google-apis-core (0.18.0) sha256=96b057816feeeab448139ed5b5c78eab7fc2a9d8958f0fbc8217dedffad054ee
