@@ -7,16 +7,24 @@
 - [.github/workflows/reusable-base-build.yml](file://.github/workflows/reusable-base-build.yml)
 - [.github/workflows/reusable-android-build.yml](file://.github/workflows/reusable-android-build.yml)
 - [.github/workflows/reusable-android-deployment.yml](file://.github/workflows/reusable-android-deployment.yml)
-- [.github/workflows/reusable-ios-build.yml](file://.github/workflows/reusable-ios-build.yml)
-- [.github/workflows/reusable-ios-deployment.yml](file://.github/workflows/reusable-ios-deployment.yml)
+- [android/Gemfile](file://android/Gemfile)
 - [android/fastlane/Fastfile](file://android/fastlane/Fastfile)
-- [ios/App/fastlane/Fastfile](file://ios/App/fastlane/Fastfile)
-- [package.json](file://package.json)
-- [capacitor.config.ts](file://capacitor.config.ts)
+- [android/fastlane/Pluginfile](file://android/fastlane/Pluginfile)
+- [android/fastlane/Deliverfile](file://android/fastlane/Deliverfile)
+- [android/fastlane/Matchfile](file://android/fastlane/Matchfile)
 - [android/variables.gradle](file://android/variables.gradle)
 - [android/app/build.gradle](file://android/app/build.gradle)
-- [karma.conf.js](file://karma.conf.js)
+- [package.json](file://package.json)
+- [capacitor.config.ts](file://capacitor.config.ts)
+- [Gemfile](file://Gemfile)
 </cite>
+
+## 更新摘要
+**所做更改**
+- 更新了Android构建系统修复相关内容，包括Gemfile变更和Ruby 4.0兼容性改进
+- 新增了Fastlane插件集成详情和构建流程优化说明
+- 补充了Android SDK版本升级和依赖管理改进
+- 完善了构建环境配置和密钥管理最佳实践
 
 ## 目录
 1. [简介](#简介)
@@ -31,9 +39,9 @@
 10. [附录：环境变量与密钥管理最佳实践](#附录环境变量与密钥管理最佳实践)
 
 ## 简介
-本指南面向Macro-Deck-Client-App的CI/CD流程，系统性解析主工作流ci.yml的执行逻辑与可复用工作流设计模式，覆盖版本确定、基础构建、Android平台构建、自动化测试与质量检查，以及Play Store的自动部署路径。同时提供调试方法、故障排除建议及环境变量与密钥管理的最佳实践。
+本指南面向Macro-Deck-Client-App的CI/CD流程，系统性解析主工作流ci.yml的执行逻辑与可复用工作流设计模式，覆盖版本确定、基础构建、Android平台构建、自动化测试与质量检查，以及Play Store的自动部署路径。本次更新重点反映了Android构建系统的最新修复和Fastlane集成改进，包括Ruby 4.0兼容性的Gemfile变更、构建流程优化以及SDK版本升级。
 
-**重要变更**：CI/CD架构已简化为仅Android构建流程，触发方式从push/PR改为release发布事件，移除了iOS和Web构建配置，工作流结构更加简洁高效。
+**重要变更**：CI/CD架构已简化为仅Android构建流程，触发方式从push/PR改为release发布事件，移除了iOS和Web构建配置，工作流结构更加简洁高效。Android构建系统经过重大优化，包括Ruby 4.0兼容性修复和Fastlane插件集成改进。
 
 ## 项目结构
 本仓库采用"主工作流 + 多个可复用工作流"的分层设计：
@@ -148,6 +156,8 @@ CI->>REL : 下载Android Artifacts并上传Release
   - 使用Gradle与Fastlane构建APK与AAB。
   - 上传APK与AAB，并设置1天保留期。
 
+**更新**：Android构建工作流现已优化，支持Ruby 4.0兼容性，通过Gemfile中的fiddle gem确保Fastlane依赖链正常工作。
+
 **章节来源**
 - [.github/workflows/reusable-android-build.yml:1-82](file://.github/workflows/reusable-android-build.yml#L1-L82)
 
@@ -161,20 +171,50 @@ CI->>REL : 下载Android Artifacts并上传Release
 - [.github/workflows/reusable-android-deployment.yml:1-30](file://.github/workflows/reusable-android-deployment.yml#L1-L30)
 
 ### 平台打包与发布细节（Fastlane）
-- **Android Fastfile**：
-  - 校验BUILD_NUMBER与VERSION_NUMBER。
-  - 自动递增versionCode并设置versionName。
-  - 使用签名属性构建APK与Bundle。
-  - 上传AAB至Play Console草稿。
-- **iOS Fastfile**：
-  - 校验BUILD_NUMBER与VERSION_NUMBER。
-  - 递增build number与version number。
-  - 获取证书与配置签名，导出ipa并生成App Store信息。
-  - 上传至TestFlight。
+
+#### Android Fastlane配置
+- **Gemfile改进**：
+  - 添加fiddle gem以支持Ruby 4.0及以上版本
+  - 确保Fastlane依赖链的向后兼容性
+- **Fastfile增强功能**：
+  - 校验BUILD_NUMBER与VERSION_NUMBER强制要求
+  - 自动递增versionCode并设置versionName
+  - 使用签名属性构建APK与Bundle
+  - 上传AAB至Play Console草稿
+- **插件集成**：
+  - fastlane-plugin-increment_version_code：自动版本号递增
+  - fastlane-plugin-increment_version_name：自动版本名称更新
+  - fastlane-plugin-firebase_app_distribution：Firebase分发支持
+
+**更新**：Fastlane配置已更新以支持Ruby 4.0兼容性和新的插件集成功能。
 
 **章节来源**
+- [android/Gemfile:1-8](file://android/Gemfile#L1-L8)
 - [android/fastlane/Fastfile:1-56](file://android/fastlane/Fastfile#L1-L56)
-- [ios/App/fastlane/Fastfile:1-68](file://ios/App/fastlane/Fastfile#L1-L68)
+- [android/fastlane/Pluginfile:1-8](file://android/fastlane/Pluginfile#L1-L8)
+
+### Android构建系统优化
+
+#### SDK版本升级
+- **compileSdkVersion**: 升级至35
+- **targetSdkVersion**: 升级至35
+- **minSdkVersion**: 保持22不变
+- **依赖版本更新**：
+  - androidxAppCompatVersion: 1.6.1
+  - androidxCoreVersion: 1.10.0
+  - coreSplashScreenVersion: 1.0.0
+  - cordovaAndroidVersion: 10.1.1
+
+#### 构建配置优化
+- **Gradle缓存**：通过actions/setup-java和gradle/actions/setup-gradle实现
+- **JDK版本支持**：同时支持Java 17和21
+- **构建类型**：release构建，禁用代码混淆以提高稳定性
+
+**更新**：Android构建系统已完成SDK版本升级和依赖优化，提供更好的兼容性和性能。
+
+**章节来源**
+- [android/variables.gradle:1-17](file://android/variables.gradle#L1-L17)
+- [android/app/build.gradle:1-61](file://android/app/build.gradle#L1-L61)
 
 ### 自动化测试与质量检查
 - 测试框架：Karma + Jasmine，配置位于karma.conf.js。
@@ -236,6 +276,9 @@ ADB --> REL["发布归档"]
 - **资源清理**：基础构建后清理www目录，避免污染后续Web客户端构建。
 - **保留期**：Artifacts设置1天保留期，降低存储压力。
 - **错误早发现**：Fastlane lanes对缺失环境变量进行校验并报错，避免静默失败。
+- **Ruby 4.0兼容性**：通过fiddle gem确保Fastlane在新版本Ruby下的稳定运行。
+
+**更新**：新增Ruby 4.0兼容性考虑，确保构建系统在现代Ruby环境下的稳定性。
 
 ## 故障排除指南
 - **版本确定异常**
@@ -251,6 +294,7 @@ ADB --> REL["发布归档"]
 - **Android构建失败**
   - 现象：Gradle签名或打包失败。
   - 排查：确认Keystore Base64解码成功；检查版本号与构建号设置；验证签名属性。
+  - **更新**：检查Ruby 4.0兼容性，确保fiddle gem正确安装。
   - 参考
     - [.github/workflows/reusable-android-build.yml:46-81](file://.github/workflows/reusable-android-build.yml#L46-L81)
     - [android/fastlane/Fastfile:14-45](file://android/fastlane/Fastfile#L14-L45)
@@ -265,27 +309,53 @@ ADB --> REL["发布归档"]
   - 参考
     - [.github/workflows/ci.yml:35-49](file://.github/workflows/ci.yml#L35-L49)
 
+**更新**：新增Ruby 4.0兼容性故障排除指导。
+
 ## 结论
-本CI/CD体系通过主工作流编排多个可复用工作流，实现了版本自动推断、Android平台构建与发布归档的完整闭环。配合Fastlane与GitHub Secrets，既保证了安全性也提升了可维护性。建议在现有基础上补充测试作业与覆盖率报告，进一步完善质量门禁。
+本CI/CD体系通过主工作流编排多个可复用工作流，实现了版本自动推断、Android平台构建与发布归档的完整闭环。配合Fastlane与GitHub Secrets，既保证了安全性也提升了可维护性。最新的Android构建系统修复包括Ruby 4.0兼容性改进、SDK版本升级和Fastlane插件集成，进一步增强了系统的稳定性和现代化程度。建议在现有基础上补充测试作业与覆盖率报告，进一步完善质量门禁。
 
 ## 附录：环境变量与密钥管理最佳实践
-- **Android相关**
-  - ANDROID_KEYSTORE_BASE64：Keystore的Base64编码。
-  - ANDROID_KEYSTORE_PASSWORD、ANDROID_KEYSTORE_KEY：Keystore密码与别名。
-  - PLAYSTORE_CREDENTIALS：Play Console JSON凭据。
-  - 参考
-    - [.github/workflows/reusable-android-build.yml:46-63](file://.github/workflows/reusable-android-build.yml#L46-L63)
-    - [.github/workflows/reusable-android-deployment.yml:24-25](file://.github/workflows/reusable-android-deployment.yml#L24-L25)
-    - [android/fastlane/Fastfile:48-54](file://android/fastlane/Fastfile#L48-L54)
-- **其他**
-  - Capacitor与平台配置：Capacitor应用ID、应用名、Android Scheme等。
-  - 参考
-    - [capacitor.config.ts:3-12](file://capacitor.config.ts#L3-L12)
-    - [android/variables.gradle:1-16](file://android/variables.gradle#L1-L16)
-    - [android/app/build.gradle:10-11](file://android/app/build.gradle#L10-L11)
-- **最佳实践**
-  - 严格区分Secrets与Vars：敏感信息放入Secrets，非敏感配置放入Vars。
-  - 限制权限：仅授予必要权限（如发布Release需要contents: write）。
-  - 分离开发与生产密钥：避免在PR或非release事件使用生产密钥。
-  - 定期轮换：定期更新Play Console凭据。
-  - 文档化：在README或Wiki记录各密钥用途与轮换流程。
+
+### Android构建环境变量
+- **必需环境变量**：
+  - BUILD_NUMBER：构建号（由GitHub Actions自动生成）
+  - VERSION_NUMBER：版本号（从版本确定工作流传递）
+  - KEYSTORE_FILE_PATH：Keystore文件路径
+  - KEYSTORE_FILE_PASSWORD：Keystore密码
+  - KEYSTORE_FILE_ALIAS：Keystore别名
+  - PLAYSTORE_CREDENTIALS：Play Console JSON凭据
+
+**更新**：新增Ruby 4.0兼容性环境变量配置要求。
+
+### 密钥与证书管理
+- **Android Keystore**：
+  - ANDROID_KEYSTORE_BASE64：Keystore的Base64编码
+  - ANDROID_KEYSTORE_PASSWORD：Keystore密码
+  - ANDROID_KEYSTORE_KEY：Keystore别名
+- **Play Store凭据**：
+  - PLAYSTORE_CREDENTIALS：Google Play Console服务账户凭据
+
+**更新**：密钥管理现需考虑Ruby 4.0兼容性要求。
+
+### 平台配置
+- **Capacitor配置**：应用ID、应用名、Android Scheme等
+- **Android Gradle配置**：SDK版本、依赖版本、构建类型
+- **Fastlane配置**：应用标识符、证书存储、发布设置
+
+**章节来源**
+- [.github/workflows/reusable-android-build.yml:46-63](file://.github/workflows/reusable-android-build.yml#L46-L63)
+- [.github/workflows/reusable-android-deployment.yml:24-25](file://.github/workflows/reusable-android-deployment.yml#L24-L25)
+- [android/fastlane/Fastfile:48-54](file://android/fastlane/Fastfile#L48-L54)
+- [capacitor.config.ts:3-12](file://capacitor.config.ts#L3-L12)
+- [android/variables.gradle:1-16](file://android/variables.gradle#L1-L16)
+- [android/app/build.gradle:10-11](file://android/app/build.gradle#L10-L11)
+
+### 最佳实践
+- **Ruby 4.0兼容性**：确保fiddle gem正确安装以支持新版本Ruby
+- **Fastlane插件管理**：使用Pluginfile管理第三方插件依赖
+- **密钥安全**：严格区分Secrets与Vars；限制权限范围
+- **版本管理**：自动递增版本号，确保发布唯一性
+- **证书轮换**：定期更新Play Console凭据和构建证书
+- **环境隔离**：分离开发与生产密钥，避免误用
+
+**更新**：新增Ruby 4.0兼容性和Fastlane插件管理最佳实践。
