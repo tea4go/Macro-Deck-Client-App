@@ -41,7 +41,8 @@ export class WebHomePage implements OnInit {
    */
   async ngOnInit() {
     this.clientId = await this.settingsService.getClientId();
-    this.version = "Web Version";
+    // 显示与 Android build.gradle 同步的版本（由 Sync-AppVersion 写入 environment）
+    this.version = `v${environment.version} (${environment.versionCode})`;
     await this.connect();
     this.websocketService.connectionLost.subscribe(async () => {
       await this.lostConnection();

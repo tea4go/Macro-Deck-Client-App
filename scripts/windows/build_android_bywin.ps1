@@ -146,6 +146,11 @@ $fastlaneArguments = @($fastlane.Arguments + @('build'))
 $code = Invoke-NativeIn -Path $androidDir -Block { & $fastlaneCommand @fastlaneArguments }
 if ($code -ne 0) { exit $code }
 
-Write-Ok "Android release APK 产物: $script:RootDir\android\app\build\outputs\apk\release\app-release.apk"
-Write-Ok "Android release AAB 产物: $script:RootDir\android\app\build\outputs\bundle\release\app-release.aab"
+# fastlane 已把（自增后的）versionCode/versionName 写回 build.gradle，
+# 以它为源同步到 iOS 与 Web，保持三端版本一致。
+Sync-AppVersion
+
+$outName = "MacroDeckClient-$env:VERSION_NUMBER-$env:BUILD_NUMBER"
+Write-Ok "Android release APK 产物: $script:RootDir\android\app\build\outputs\apk\release\$outName.apk"
+Write-Ok "Android release AAB 产物: $script:RootDir\android\app\build\outputs\bundle\release\$outName.aab"
 exit 0

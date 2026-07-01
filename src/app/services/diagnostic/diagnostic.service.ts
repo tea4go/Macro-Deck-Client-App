@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import {App} from "@capacitor/app";
 import {Platform} from "@ionic/angular";
 import {Device} from "@capacitor/device";
+import {environment} from "../../../environments/environment";
 
 /** 诊断服务，提供应用版本信息和设备平台检测功能 */
 @Injectable({
@@ -13,7 +14,7 @@ export class DiagnosticService {
 
   /**
    * 获取应用版本号字符串
-   * 原生平台返回带前缀的版本号，Web 平台返回 "Web Client"
+   * 原生平台返回原生包版本，Web 平台返回与 Android 一致的「版本名+构建号」
    * @returns 版本号字符串
    */
   async getVersion() {
@@ -22,7 +23,8 @@ export class DiagnosticService {
       return `v. ${this.versionPrefix()}-${info.version}`;
     }
 
-    return "Web Client";
+    // Web 平台：显示与 Android build.gradle 同步的版本（由 Sync-AppVersion 写入 environment）
+    return `v${environment.version} (${environment.versionCode})`;
   }
 
   /**

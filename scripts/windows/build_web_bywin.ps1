@@ -263,6 +263,11 @@ if ($Clean -or $didInstall) {
   Write-Host ""
 }
 
+# ─── 版本同步：以 build.gradle 为源，写入 environment*.ts，使界面显示与 Android 一致 ───
+Write-Host "[版本同步] 从 android/app/build.gradle 同步版本到 Web" -ForegroundColor Cyan
+Sync-AppVersion
+Write-Host ""
+
 # ─── build：Web/PWA 生产构建 ─────────────────────────────────────────────────
 Write-Banner -Title "Web/PWA 构建（-c $Configuration）" -Color Cyan
 Write-Host ""

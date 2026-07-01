@@ -1149,6 +1149,64 @@ function Read-AndroidGradleValue([string]$Key) {
 
 <#
 .SYNOPSIS
+  以 android/app/build.gradle 的 versionCode/versionName 为源，同步到 iOS 与 Web。
+.DESCRIPTION
+  版本号唯一权威是 build.gradle。本函数读取它，写入：
+    - iOS：ios/App/App.xcodeproj/project.pbxproj 的 CURRENT_PROJECT_VERSION(=versionCode)
+      与 MARKETING_VERSION(=versionName)，Debug/Release 两套 config 共 4 处
+    - Web：src/environments/*.ts（4 个）的 version(=versionName) 与 versionCode(=versionCode)
+  目标文件不存在时跳过（不报错），兼容仅打某一端的场景。
+.NOTES
+  仅同步版本号，不动签名 / bundleId / 其他配置。UTF-8 无 BOM 写回。
+#>
+function Sync-AppVersion {
+  $versionCode = Read-AndroidGradleValue 'versionCode'
+  $versionName = Read-AndroidGradleValue 'versionName'
+  if ([string]::IsNullOrWhiteSpace($versionCode) -or [string]::IsNullOrWhiteSpace($versionName)) {
+    Write-Warn "无法从 build.gradle 读取版本（code='$versionCode' name='$versionName'），跳过版本同步"
+    return
+  }
+  Write-Ok "版本同步源：versionCode=$versionCode versionName=$versionName（来自 build.gradle）"
+
+  $utf8NoBom = [System.Text.UTF8Encoding]::new($false)
+
+  # ── iOS pbxproj ──
+  $pbxproj = Join-Path $script:RootDir 'ios\App\App.xcodeproj\project.pbxproj'
+  if (Test-Path -LiteralPath $pbxproj) {
+    $content = [System.IO.File]::ReadAllText($pbxproj)
+    $content = [regex]::Replace($content, 'CURRENT_PROJECT_VERSION = [^;]+;', "CURRENT_PROJECT_VERSION = $versionCode;")
+    $content = [regex]::Replace($content, 'MARKETING_VERSION = [^;]+;', "MARKETING_VERSION = $versionName;")
+    [System.IO.File]::WriteAllText($pbxproj, $content, $utf8NoBom)
+    Write-Ok "iOS 已同步：CURRENT_PROJECT_VERSION=$versionCode, MARKETING_VERSION=$versionName"
+  } else {
+    Write-Warn "未找到 iOS 工程（$pbxproj），跳过 iOS 同步"
+  }
+
+  # ── Web environment*.ts ──
+  $envFiles = @(
+    'src\environments\environment.ts',
+    'src\environments\environment.prod.ts',
+    'src\environments\environment.web.ts',
+    'src\environments\environment.web.prod.ts'
+  )
+  foreach ($rel in $envFiles) {
+    $path = Join-Path $script:RootDir $rel
+    if (-not (Test-Path -LiteralPath $path)) {
+      Write-Warn "未找到 $rel，跳过"
+      continue
+    }
+    $c = [System.IO.File]::ReadAllText($path)
+    # version: "x.y.z"  → versionName
+    $c = [regex]::Replace($c, 'version:\s*"[^"]*"', "version: `"$versionName`"")
+    # versionCode: N  → versionCode
+    $c = [regex]::Replace($c, 'versionCode:\s*\d+', "versionCode: $versionCode")
+    [System.IO.File]::WriteAllText($path, $c, $utf8NoBom)
+    Write-Ok "Web 已同步：$rel"
+  }
+}
+
+<#
+.SYNOPSIS
   加载本地 Android 签名 PowerShell 配置。
 .PARAMETER FilePath
   本地签名配置文件路径。
