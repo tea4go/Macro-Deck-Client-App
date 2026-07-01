@@ -3,7 +3,7 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-01T04:22:18Z"
+exported_at: "2026-07-01T08:48:20Z"
 modules:
     "":
         dir_name: Macro Deck 跨平台客户端编排中心
@@ -351,28 +351,37 @@ modules:
         depends_on: []
         related_to: []
     android:
-        dir_name: Android 原生壳与自动化发布
-        title: Android 原生壳与自动化发布
+        dir_name: Android 客户端壳工程与自动化发布
+        title: Android 客户端壳工程与自动化发布
         scope:
             - android/
         source_files: []
         children: []
         depends_on: []
         related_to:
-            - path: app
             - path: scripts
     app:
-        dir_name: Macro Deck 客户端应用
-        title: Macro Deck 客户端应用
+        dir_name: Macro Deck 客户端应用核心
+        title: Macro Deck 客户端应用核心
         scope:
             - src/
         source_files: []
+        children:
+            - app/core
+        depends_on: []
+        related_to: []
+    app/core:
+        dir_name: 应用根模块与启动引导
+        title: 应用根模块与启动引导
+        scope:
+            - src/app/app.component.html
+            - src/app/app.component.spec.ts
+            - src/app/app.component.ts
+            - src/app/app.module.ts
+        source_files: []
         children: []
         depends_on: []
-        related_to:
-            - path: android
-            - path: ios
-            - path: scripts
+        related_to: []
     build_system:
         dir_name: 基于 GitHub Actions 与 Fastlane 的跨平台自动化构建与分发系统
         title: 基于 GitHub Actions 与 Fastlane 的跨平台自动化构建与分发系统
@@ -460,7 +469,6 @@ modules:
         children: []
         depends_on: []
         related_to:
-            - path: app
             - path: scripts
     logging_system:
         dir_name: 日志系统 — 基于原生控制台的非结构化调试输出
@@ -485,5 +493,4 @@ modules:
         depends_on: []
         related_to:
             - path: android
-            - path: app
             - path: ios

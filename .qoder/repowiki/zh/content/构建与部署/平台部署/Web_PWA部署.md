@@ -12,15 +12,21 @@
 - [src/environments/environment.web.ts](file://src/environments/environment.web.ts)
 - [src/environments/environment.prod.ts](file://src/environments/environment.prod.ts)
 - [src/environments/environment.ts](file://src/environments/environment.ts)
+- [src/app/services/diagnostic/diagnostic.service.ts](file://src/app/services/diagnostic/diagnostic.service.ts)
+- [src/app/pages/web-home/web-home.page.ts](file://src/app/pages/web-home/web-home.page.ts)
+- [src/app/pages/web-home/web-home.page.html](file://src/app/pages/web-home/web-home.page.html)
+- [src/app/pages/web-home/web-home.page.scss](file://src/app/pages/web-home/web-home.page.scss)
+- [src/assets/i18n/en.json](file://src/assets/i18n/en.json)
+- [src/assets/i18n/zh.json](file://src/assets/i18n/zh.json)
 </cite>
 
 ## 更新摘要
 **所做更改**
-- 移除了所有Web/PWA相关内容，包括PWA配置、Service Worker设置、Web构建配置
-- 删除了manifest.webmanifest相关配置和引用
-- 移除了Web特定的环境配置和构建脚本
-- 更新了项目架构描述，反映项目现为纯Android应用
-- 移除了Docker容器化Web部署的相关内容
+- 新增Web界面版本信息显示功能：诊断服务返回格式化的版本字符串
+- 更新Web主页组件：显示完整的版本信息和客户端ID
+- 新增Web环境配置：支持独立的Web版本构建配置
+- 更新版本号显示格式：统一为"版本号（构建号）"格式
+- 新增Web特定的构建配置和部署选项
 
 ## 目录
 1. [简介](#简介)
@@ -28,220 +34,250 @@
 3. [核心组件](#核心组件)
 4. [架构概览](#架构概览)
 5. [详细组件分析](#详细组件分析)
-6. [依赖关系分析](#依赖关系分析)
-7. [性能考虑](#性能考虑)
-8. [故障排除指南](#故障排除指南)
-9. [结论](#结论)
-10. [附录](#附录)
+6. [Web版本信息显示](#web版本信息显示)
+7. [依赖关系分析](#依赖关系分析)
+8. [性能考虑](#性能考虑)
+9. [故障排除指南](#故障排除指南)
+10. [结论](#结论)
+11. [附录](#附录)
 
 ## 简介
-**已更新** 本指南现已调整为针对纯Android应用的部署需求。由于项目已完全移除Web/PWA支持，本指南专注于Android平台的部署流程和配置。
+本指南详细介绍Web和PWA平台部署的完整解决方案。项目现已支持Web版本部署，通过Angular CLI实现生产级构建，配合PWA配置和Service Worker实现离线功能。诊断服务提供统一的版本信息获取，Web主页显示完整的版本号和客户端ID，确保用户能够清楚识别应用版本。
 
-本项目采用Angular + Capacitor架构，现已完全转向原生Android应用开发。虽然仍保留部分Web构建配置作为历史参考，但实际部署流程已简化为纯Android应用的构建、签名和分发。
+本项目采用Angular + Capacitor架构，支持多平台部署，包括Web、Android和iOS平台。Web版本通过独立的构建配置实现，与原生应用共享核心功能。
 
 ## 项目结构
-**已更新** 项目现已为纯Android应用，主要关注以下文件与配置：
-- 构建与打包：angular.json、package.json、Dockerfile
-- Android原生配置：capacitor.config.ts、ionic.config.json
-- 环境配置：environment.prod.ts、environment.ts（原生应用配置）
-- 跨平台集成：Capacitor配置与原生插件
+项目结构现已扩展以支持Web版本部署，主要包括以下关键组件：
+
+- **构建配置**：angular.json定义多环境构建配置，包括Web和原生应用
+- **环境配置**：environment.web.ts和environment.web.prod.ts专为Web版本设计
+- **Web组件**：WebHomePage提供浏览器端连接功能
+- **诊断服务**：统一版本信息获取和平台检测
+- **PWA配置**：ngsw-config.json实现Service Worker和缓存策略
+- **容器化**：Dockerfile支持Web应用的Docker部署
 
 ```mermaid
 graph TB
-A["angular.json<br/>构建配置"] --> B["www/<br/>输出目录"]
+A["angular.json<br/>多环境构建配置"] --> B["www/<br/>构建输出目录"]
 C["package.json<br/>脚本与依赖"] --> A
-D["Dockerfile<br/>容器化构建"] --> B
-E["capacitor.config.ts<br/>Android配置"] --> B
-F["ionic.config.json<br/>项目类型"] --> E
-G["environment.prod.ts<br/>原生应用配置"] --> A
+D["Web环境配置<br/>environment.web.ts"] --> A
+E["诊断服务<br/>DiagnosticService"] --> F["版本信息<br/>格式化字符串"]
+G["Web主页<br/>WebHomePage"] --> H["版本显示<br/>完整版本信息"]
+I["PWA配置<br/>ngsw-config.json"] --> J["Service Worker<br/>缓存策略"]
 ```
 
 **图表来源**
-- [angular.json:13-46](file://angular.json#L13-L46)
-- [Dockerfile:10-11](file://Dockerfile#L10-L11)
-- [capacitor.config.ts:6](file://capacitor.config.ts#L6)
-- [ionic.config.json:7](file://ionic.config.json#L7)
+- [angular.json:13-120](file://angular.json#L13-L120)
+- [src/environments/environment.web.ts:1-12](file://src/environments/environment.web.ts#L1-12)
+- [src/app/services/diagnostic/diagnostic.service.ts:20-28](file://src/app/services/diagnostic/diagnostic.service.ts#L20-L28)
+- [src/app/pages/web-home/web-home.page.ts:42-50](file://src/app/pages/web-home/web-home.page.ts#L42-L50)
 
 **章节来源**
 - [angular.json:1-204](file://angular.json#L1-L204)
 - [package.json:1-93](file://package.json#L1-L93)
-- [Dockerfile:1-16](file://Dockerfile#L1-L16)
-- [capacitor.config.ts:1-16](file://capacitor.config.ts#L1-L16)
-- [ionic.config.json:1-10](file://ionic.config.json#L1-L10)
+- [src/environments/environment.web.ts:1-12](file://src/environments/environment.web.ts#L1-L12)
+- [src/environments/environment.web.prod.ts:1-12](file://src/environments/environment.web.prod.ts#L1-L12)
 
 ## 核心组件
-**已更新** 由于Web支持已被移除，核心组件现聚焦于Android原生应用：
-- Angular CLI构建配置：定义输出目录、资源处理、多环境配置（production/development）
-- Android原生配置：通过capacitor.config.ts配置应用ID、名称、Web目录和服务器设置
-- 环境配置：environment.prod.ts用于原生应用生产环境，environment.ts为默认开发环境
-- Docker容器化：使用多阶段构建，安装CLI工具与依赖，执行ionic build -c production
-- 跨平台集成：Capacitor提供原生功能桥接，支持Android特定功能
+项目的核心组件现已扩展以支持Web版本部署：
+
+- **Angular CLI构建配置**：定义Web和原生应用的构建目标，支持多环境配置
+- **Web环境配置**：environment.web.ts和environment.web.prod.ts提供Web版本专用配置
+- **诊断服务**：DiagnosticService统一处理版本信息获取和平台检测
+- **Web主页组件**：WebHomePage提供浏览器端连接和版本信息显示
+- **PWA配置**：ngsw-config.json实现Service Worker和缓存策略
+- **Docker容器化**：支持Web应用的Docker部署和容器化部署
 
 **章节来源**
-- [angular.json:87-120](file://angular.json#L87-L120)
-- [capacitor.config.ts:3-13](file://capacitor.config.ts#L3-L13)
-- [src/environments/environment.prod.ts:1-10](file://src/environments/environment.prod.ts#L1-L10)
-- [src/environments/environment.ts:1-21](file://src/environments/environment.ts#L1-L21)
-- [Dockerfile:1-16](file://Dockerfile#L1-L16)
+- [angular.json:47-120](file://angular.json#L47-L120)
+- [src/app/services/diagnostic/diagnostic.service.ts:1-92](file://src/app/services/diagnostic/diagnostic.service.ts#L1-L92)
+- [src/app/pages/web-home/web-home.page.ts:1-120](file://src/app/pages/web-home/web-home.page.ts#L1-L120)
 
 ## 架构概览
-**已更新** 下图展示当前纯Android应用的部署关键流程：构建、原生配置与分发。
+下图展示Web版本部署的关键流程：构建、配置、部署和运行时交互。
 
 ```mermaid
 sequenceDiagram
 participant Dev as "开发者"
 participant CLI as "Angular CLI"
-participant Android as "Android构建系统"
-participant APK as "APK/包管理"
-Dev->>CLI : 执行构建命令
-CLI->>Android : 生成Android原生应用
-Android->>APK : 创建APK文件
-Dev->>APK : 签名与分发
+participant Build as "构建系统"
+participant Web as "Web应用"
+participant User as "用户浏览器"
+Dev->>CLI : 执行Web构建命令
+CLI->>Build : 解析配置和环境
+Build->>Web : 生成Web应用包
+Web->>User : 提供Web界面
+User->>Web : 显示版本信息
+Web->>User : 展示完整版本号
 ```
 
 **图表来源**
 - [angular.json:122-139](file://angular.json#L122-L139)
-- [Dockerfile:11](file://Dockerfile#L11)
+- [src/app/pages/web-home/web-home.page.ts:42-50](file://src/app/pages/web-home/web-home.page.ts#L42-L50)
 
 ## 详细组件分析
 
-### Android原生构建配置
-**已更新** 由于Web支持移除，构建配置已简化：
-- 输出与资源：输出目录仍为www，但主要用于Capacitor集成而非Web部署
-- 环境配置：仅保留production和development两种配置，web相关配置已移除
-- 代码分割与优化：默认生产配置启用outputHashing=all，适用于原生应用分发
-- 资源处理：assets、SVG图标、样式文件保持不变
+### Web构建配置
+Web构建配置现已支持独立的Web版本构建：
+
+- **输出目录**：www目录作为Web应用的构建输出
+- **环境配置**：web和web_production两个专用配置
+- **资源处理**：支持SVG图标、样式文件和manifest.webmanifest
+- **Service Worker**：启用PWA功能，支持离线访问
+- **代码分割**：默认生产配置启用outputHashing=all
 
 ```mermaid
 flowchart TD
-Build["执行构建"] --> Env["选择配置(production/development)"]
-Env --> Options["解析构建选项<br/>输出目录/资源/样式/脚本"]
-Options --> Optimize["优化与代码分割"]
-Optimize --> Hash["输出哈希(生产)"]
-Hash --> Dist["生成www/目录"]
+Build["Web构建"] --> Env["选择Web环境<br/>web/web_production"]
+Env --> Config["解析构建配置<br/>assets/styles/scripts"]
+Config --> SW["生成Service Worker<br/>ngsw-config.json"]
+SW --> Output["输出到www/<br/>Web应用包"]
 ```
 
 **图表来源**
-- [angular.json:87-120](file://angular.json#L87-L120)
+- [angular.json:47-86](file://angular.json#L47-L86)
 
 **章节来源**
 - [angular.json:13-120](file://angular.json#L13-L120)
 - [package.json:7-14](file://package.json#L7-L14)
 
-### Docker容器化部署
-**已更新** Docker配置已调整为原生Android应用构建：
-- 多阶段构建：第一阶段安装Node、CLI与yarn依赖，执行ionic build -c production
-- 运行方式：从第一阶段复制www至scratch镜像，仅保留运行时产物
-- 适用场景：CI/CD流水线中的构建步骤，不直接提供Web服务
+### Web环境配置
+Web环境配置提供独立的Web版本设置：
+
+- **开发环境**：environment.web.ts配置webVersion=true
+- **生产环境**：environment.web.prod.ts配置webVersion=true
+- **版本信息**：同步Android版本号和构建号
+- **基础配置**：继承基础环境配置，添加web特有设置
+
+**章节来源**
+- [src/environments/environment.web.ts:1-12](file://src/environments/environment.web.ts#L1-L12)
+- [src/environments/environment.web.prod.ts:1-12](file://src/environments/environment.web.prod.ts#L1-L12)
+
+### 诊断服务增强
+诊断服务现已支持Web版本的版本信息获取：
+
+- **版本格式化**：Web平台返回"v版本号（构建号）"格式
+- **平台检测**：区分iOS、Android和Web平台
+- **版本前缀**：iOS=i，Android=a，Web=pwa
+- **同步机制**：与Android build.gradle版本同步
+
+**章节来源**
+- [src/app/services/diagnostic/diagnostic.service.ts:20-28](file://src/app/services/diagnostic/diagnostic.service.ts#L20-L28)
+
+### Web主页组件
+Web主页组件提供完整的版本信息显示：
+
+- **版本显示**：在页面底部显示完整版本信息
+- **客户端ID**：同时显示客户端唯一标识符
+- **连接状态**：处理连接丢失和重连逻辑
+- **WebSocket连接**：支持同源和跨源服务器连接
+
+**章节来源**
+- [src/app/pages/web-home/web-home.page.ts:19-50](file://src/app/pages/web-home/web-home.page.ts#L19-L50)
+- [src/app/pages/web-home/web-home.page.html:14-18](file://src/app/pages/web-home/web-home.page.html#L14-L18)
+
+## Web版本信息显示
+Web版本信息显示功能是本次更新的核心改进：
+
+### 版本信息格式
+Web版本现在显示完整的版本信息格式：
+- **格式**：`v版本号（构建号）`
+- **示例**：`v3.0.0（1）`
+- **来源**：environment.version和environment.versionCode
+
+### 版本获取机制
+版本信息通过以下方式获取和显示：
+
+1. **初始化获取**：组件初始化时获取版本信息
+2. **环境变量**：从environment.web.ts获取版本配置
+3. **格式化显示**：统一格式化为完整版本字符串
+4. **实时更新**：支持版本号同步更新
 
 ```mermaid
 sequenceDiagram
-participant Dev as "开发者"
-participant Docker as "Docker构建"
-participant Node as "Node阶段"
-participant Final as "最终镜像(scratch)"
-Dev->>Docker : docker build .
-Docker->>Node : 安装CLI与依赖
-Node->>Node : ionic build -c production
-Node-->>Final : COPY www/
-Final-->>Dev : 提供构建产物
+participant Component as "WebHomePage"
+participant Environment as "Environment"
+participant Version as "版本信息"
+Component->>Environment : 读取版本配置
+Environment->>Version : 返回版本号和构建号
+Version->>Component : 格式化为完整版本字符串
+Component->>Component : 显示版本信息
 ```
 
 **图表来源**
-- [Dockerfile:1-16](file://Dockerfile#L1-L16)
+- [src/app/pages/web-home/web-home.page.ts:42-50](file://src/app/pages/web-home/web-home.page.ts#L42-L50)
+- [src/environments/environment.web.ts:8-12](file://src/environments/environment.web.ts#L8-L12)
 
 **章节来源**
-- [Dockerfile:1-16](file://Dockerfile#L1-L16)
-
-### 环境与版本控制
-**已更新** 环境配置已简化为原生应用专用：
-- production：设置baseHref/deployUrl、预算限制、文件替换为原生生产环境、开启输出哈希
-- development：开发环境配置（非生产优化）
-- web相关配置已移除，environment.web.ts和environment.web.prod.ts不再使用
-
-**章节来源**
-- [src/environments/environment.prod.ts:1-10](file://src/environments/environment.prod.ts#L1-L10)
-- [src/environments/environment.ts:1-21](file://src/environments/environment.ts#L1-L21)
-
-### Capacitor原生集成
-**已更新** Capacitor配置现专注于Android原生应用：
-- 应用ID与名称：com.suchbyte.macrodeck、Macro Deck Client
-- Web目录：www，与Angular构建输出一致
-- 服务器配置：androidScheme设置为http
-- iOS配置：保留scheme配置用于iOS平台
-
-**章节来源**
-- [capacitor.config.ts:3-13](file://capacitor.config.ts#L3-L13)
-
-### Ionic项目配置
-**已更新** Ionic配置反映纯Android应用定位：
-- 项目类型：angular
-- 集成：保留capacitor和cordova集成配置
-- 应用ID：18f990a7
-
-**章节来源**
-- [ionic.config.json:1-10](file://ionic.config.json#L1-L10)
+- [src/app/pages/web-home/web-home.page.ts:21-25](file://src/app/pages/web-home/web-home.page.ts#L21-L25)
+- [src/app/pages/web-home/web-home.page.html:16](file://src/app/pages/web-home/web-home.page.html#L16)
 
 ## 依赖关系分析
-**已更新** 依赖关系已简化为Android原生应用：
-- 构建链路：package.json scripts驱动Angular CLI与Ionic CLI
-- 配置链路：angular.json定义构建目标与配置，输出至www
-- 原生集成：capacitor.config.ts指定webDir为www，与构建输出一致
-- 环境链路：environment.ts通过angular.json的fileReplacements替换为具体环境
+Web版本部署的依赖关系现已扩展：
+
+- **构建链路**：package.json scripts驱动Angular CLI构建
+- **配置链路**：angular.json定义Web和原生应用配置
+- **环境链路**：environment.web.ts替换基础环境配置
+- **运行时链路**：Web主页组件使用诊断服务获取版本信息
 
 ```mermaid
 graph LR
-pkg["package.json"] --> cli["Angular CLI/Ionic CLI"]
-cli --> cfg["angular.json"]
-cfg --> out["www/"]
-cap["capacitor.config.ts"] --> out
-env["environment.ts"] --> cfg
+pkg["package.json"] --> cli["Angular CLI"]
+cli --> cfg["angular.json<br/>Web配置"]
+cfg --> env["environment.web.ts<br/>Web环境"]
+env --> out["www/<br/>Web构建输出"]
+out --> sw["Service Worker<br/>ngsw-config.json"]
 ```
 
 **图表来源**
 - [package.json:7-14](file://package.json#L7-L14)
-- [angular.json:13-46](file://angular.json#L13-L46)
-- [capacitor.config.ts:6](file://capacitor.config.ts#L6)
+- [angular.json:47-86](file://angular.json#L47-L86)
 
 **章节来源**
 - [package.json:1-93](file://package.json#L1-L93)
 - [angular.json:1-204](file://angular.json#L1-L204)
-- [capacitor.config.ts:1-16](file://capacitor.config.ts#L1-L16)
 
 ## 性能考虑
-**已更新** 性能优化现聚焦于Android原生应用：
-- 代码分割与懒加载：启用路由级懒加载与按需模块加载，减少APK体积
-- 资源优化：使用outputHashing=all，结合CDN分发策略
-- 构建预算：利用angular.json中的budgets配置，设定初始与样式预算阈值
-- 原生性能：通过Capacitor插件优化Android特定功能性能
+Web版本部署的性能优化策略：
+
+- **代码分割**：启用路由级懒加载和按需模块加载
+- **资源优化**：使用outputHashing=all实现缓存优化
+- **PWA缓存**：Service Worker实现离线访问和缓存策略
+- **构建预算**：angular.json中的budgets配置控制包大小
+- **CDN支持**：支持CDN分发和静态资源优化
 
 ## 故障排除指南
-**已更新** 故障排除现针对Android原生应用：
-- 构建失败
-  - 确认Capacitor配置中的webDir与构建输出目录一致
-  - 检查Android SDK和NDK环境配置
-- APK签名问题
-  - 确认Android签名密钥配置正确
-  - 检查ProGuard/R8混淆配置
-- 设备兼容性
-  - 使用Android Studio AVD测试不同API级别
-  - 验证目标SDK版本与最低支持版本
+Web版本部署的常见问题和解决方案：
+
+- **版本信息不显示**
+  - 检查environment.web.ts中的版本配置
+  - 确认Web环境配置正确加载
+  - 验证版本号格式是否符合预期
+
+- **Service Worker问题**
+  - 清除浏览器缓存和Service Worker注册
+  - 检查ngsw-config.json配置
+  - 验证manifest.webmanifest文件
+
+- **构建失败**
+  - 确认Web环境配置文件存在
+  - 检查angular.json中的Web配置
+  - 验证Node.js和npm版本兼容性
 
 **章节来源**
-- [capacitor.config.ts:6](file://capacitor.config.ts#L6)
-- [angular.json:87-120](file://angular.json#L87-L120)
+- [src/app/pages/web-home/web-home.page.ts:42-50](file://src/app/pages/web-home/web-home.page.ts#L42-L50)
+- [angular.json:47-86](file://angular.json#L47-L86)
 
 ## 结论
-**已更新** 本指南现已调整为纯Android应用部署的最佳实践：
-- 通过angular.json完成原生应用构建与配置
-- 借助capacitor.config.ts实现原生功能集成
-- 结合Dockerfile实现CI/CD流水线中的构建步骤
-- 专注于Android平台的性能优化与兼容性测试
+Web/PWA部署指南现已完善，支持完整的Web版本部署流程。通过诊断服务的版本信息获取、Web主页的版本显示功能，以及完善的PWA配置，项目实现了跨平台的一致用户体验。Web版本不仅提供了与原生应用相同的功能，还具备了现代Web应用的特性，如离线访问、推送通知等。
 
 ## 附录
-**已更新** 关键配置速览（已简化）：
-- 构建：angular.json（输出目录、资源、配置集）
-- 原生集成：capacitor.config.ts（应用ID、名称、Web目录）
-- 环境：environment.prod.ts（原生应用配置）、environment.ts（默认开发环境）
-- 容器：Dockerfile（多阶段构建与产物复制）
-- 项目：ionic.config.json（项目类型与集成配置）
+Web部署关键配置速览：
+
+- **构建配置**：angular.json（多环境配置、Service Worker）
+- **Web环境**：environment.web.ts（Web版本配置）
+- **诊断服务**：DiagnosticService（版本信息获取）
+- **Web组件**：WebHomePage（版本显示和连接功能）
+- **PWA配置**：ngsw-config.json（Service Worker和缓存策略）
+- **容器化**：Dockerfile（Web应用部署）
+- **项目配置**：ionic.config.json（项目类型和集成）

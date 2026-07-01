@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: app
+title: Macro Deck 客户端应用核心
+scope:
+    - src/
+source_files: []
+depends_on: []
+related_to: []
