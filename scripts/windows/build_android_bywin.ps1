@@ -9,6 +9,9 @@
   4) 在 android 目录下按 fastlane 官方推荐执行 bundle exec fastlane build 产出 APK/AAB
 .PARAMETER Check
   只检查签名变量、npx、fastlane 是否可用，不执行 Web/Android 构建。
+.PARAMETER Publish
+  构建成功后，把 APK+AAB 发布到 GitHub Release（tag = v<versionName>+<versionCode>），
+  release 说明取自项目根 RELEASE_NOTES.md。需已安装并登录 gh CLI。
 .NOTES
   本脚本只负责 Android release 构建；Ruby、fastlane、Android SDK 安装分别由
   install_2_ruby_bywin.ps1、install_3_fastlane_bywin.ps1、install_4_android_sdk_bywin.ps1 处理。
@@ -16,9 +19,12 @@
   .\build_android_bywin.ps1 -Check
 .EXAMPLE
   .\build_android_bywin.ps1
+.EXAMPLE
+  .\build_android_bywin.ps1 -Publish
 #>
 param(
-  [switch]$Check
+  [switch]$Check,
+  [switch]$Publish
 )
 
 $ErrorActionPreference = 'Stop'
@@ -151,6 +157,51 @@ if ($code -ne 0) { exit $code }
 Sync-AppVersion
 
 $outName = "MacroDeckClient-$env:VERSION_NUMBER-$env:BUILD_NUMBER"
-Write-Ok "Android release APK 产物: $script:RootDir\android\app\build\outputs\apk\release\$outName.apk"
-Write-Ok "Android release AAB 产物: $script:RootDir\android\app\build\outputs\bundle\release\$outName.aab"
+$apkPath = Join-Path $script:RootDir "android\app\build\outputs\apk\release\$outName.apk"
+$aabPath = Join-Path $script:RootDir "android\app\build\outputs\bundle\release\$outName.aab"
+Write-Ok "Android release APK 产物: $apkPath"
+Write-Ok "Android release AAB 产物: $aabPath"
+
+# ─── 发布到 GitHub Release（仅 -Publish 时）───────────────────────────────────
+if ($Publish) {
+  Write-Banner '发布到 GitHub Release'
+
+  # 前置检查：gh CLI 已装且已登录、产物与说明文件齐全
+  if (-not (Get-CommandPath 'gh')) {
+    Write-Fail '未找到 gh CLI，无法发布。请先安装：https://cli.github.com/ 并运行 gh auth login'
+    exit 1
+  }
+  Invoke-NativeStream -Block { & gh auth status }
+  if ($LASTEXITCODE -ne 0) {
+    Write-Fail 'gh 未登录，请先运行：gh auth login'
+    exit 1
+  }
+  $notesFile = Join-Path $script:RootDir 'RELEASE_NOTES.md'
+  if (-not (Test-Path -LiteralPath $notesFile)) {
+    Write-Fail "未找到更新说明文件：$notesFile（请先编辑它作为 release 说明）"
+    exit 1
+  }
+  foreach ($f in @($apkPath, $aabPath)) {
+    if (-not (Test-Path -LiteralPath $f)) {
+      Write-Fail "产物不存在，无法发布：$f"
+      exit 1
+    }
+  }
+
+  $tag = "v$env:VERSION_NUMBER+$env:BUILD_NUMBER"
+  $title = "MacroDeck Client v$env:VERSION_NUMBER ($env:BUILD_NUMBER)"
+  $repo = 'tea4go/Macro-Deck-Client-App'
+  Write-Host "  发布 tag: $tag" -ForegroundColor Cyan
+  Write-Host "  上传产物: $outName.apk, $outName.aab" -ForegroundColor Cyan
+
+  Invoke-NativeStream -Block {
+    & gh release create $tag $apkPath $aabPath --title $title --notes-file $notesFile --repo $repo
+  }
+  if ($LASTEXITCODE -ne 0) {
+    Write-Fail "GitHub Release 发布失败（tag 可能已存在，请提升 versionCode 后重试）"
+    exit 1
+  }
+  Write-Ok "已发布到 GitHub Release：https://github.com/$repo/releases/tag/$tag"
+}
+
 exit 0
