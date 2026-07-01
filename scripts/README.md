@@ -5,39 +5,37 @@ These scripts avoid the npm peer dependency conflict by installing dependencies 
 ## Setup
 
 ```bash
-./scripts/unix/bootstrap.sh
+./scripts/macos/install_1_base_tools_bymac.sh
+./scripts/macos/install_2_ruby_bymac.sh
+./scripts/macos/install_3_fastlane_bymac.sh
+./scripts/macos/install_4_android_sdk_bymac.sh
 ```
 
-Windows Command Prompt:
+Windows PowerShell:
 
-```cmd
-scripts\windows\bootstrap.cmd
+```powershell
+.\scripts\windows\install_1_base_tools_bywin.ps1
 ```
 
 ## Run
 
 ```bash
-./scripts/unix/run-web.sh
-./scripts/unix/run-android.sh
-./scripts/unix/run-ios.sh
+./scripts/macos/run_web_bymac.sh
+./scripts/macos/run_android_bymac.sh
+./scripts/macos/run_ios_bymac.sh
 ```
 
-Windows Command Prompt:
+Windows PowerShell:
 
-```cmd
-scripts\windows\run-web.cmd
-scripts\windows\run-android.cmd
+```powershell
+.\scripts\windows\build_web_bywin.ps1 dev
 ```
 
 Pass Capacitor options after the script name, for example:
 
 ```bash
-./scripts/unix/run-android.sh --target Pixel_8_API_35
-./scripts/unix/run-ios.sh --target "iPhone 16"
-```
-
-```cmd
-scripts\windows\run-android.cmd --target Pixel_8_API_35
+./scripts/macos/run_android_bymac.sh --target Pixel_8_API_35
+./scripts/macos/run_ios_bymac.sh --target "iPhone 16"
 ```
 
 ## Build
@@ -45,11 +43,11 @@ scripts\windows\run-android.cmd --target Pixel_8_API_35
 Web:
 
 ```bash
-./scripts/unix/build-web.sh
+./scripts/macos/build_web_bymac.sh build
 ```
 
-```cmd
-scripts\windows\build-web.cmd
+```powershell
+.\scripts\windows\build_web_bywin.ps1 build
 ```
 
 Android signed release APK and AAB:
@@ -57,10 +55,10 @@ Android signed release APK and AAB:
 ```bash
 cp scripts/local/android-signing.env.example scripts/local/android-signing.env
 vim scripts/local/android-signing.env
-./scripts/unix/build-android.sh
+./scripts/macos/build_android_bymac.sh
 ```
 
-At minimum, set `KEYSTORE_FILE_PASSWORD` in `scripts/local/android-signing.env`. The Unix script defaults to `~/keystore/macro-deck-client-keystore.jks`, alias `macro-deck-client`, and the current Android `versionCode`/`versionName`. Override them in the same file only when needed:
+At minimum, set `KEYSTORE_FILE_PASSWORD` in `scripts/local/android-signing.env`. The macOS script defaults to `~/keystore/macro-deck-client-keystore.jks`, alias `macro-deck-client`, and the current Android `versionCode`/`versionName`. Override them in the same file only when needed:
 
 ```bash
 BUILD_NUMBER=3001
@@ -69,19 +67,19 @@ KEYSTORE_FILE_PATH=/path/to/keystore.jks
 KEYSTORE_FILE_ALIAS=your_alias
 ```
 
-```cmd
-copy scripts\local\android-signing.cmd.example scripts\local\android-signing.cmd
-notepad scripts\local\android-signing.cmd
-scripts\windows\build-android.cmd
+```powershell
+copy scripts\local\android-signing.ps1.example scripts\local\android-signing.ps1
+notepad scripts\local\android-signing.ps1
+.\scripts\windows\build_android_bywin.ps1
 ```
 
-At minimum, set `KEYSTORE_FILE_PASSWORD` in `scripts\local\android-signing.cmd`. The Windows script defaults to `%USERPROFILE%\keystore\macro-deck-client-keystore.jks`, alias `macro-deck-client`, and the current Android `versionCode`/`versionName`. Override them in the same file only when needed:
+At minimum, set `KEYSTORE_FILE_PASSWORD` in `scripts\local\android-signing.ps1`. The Windows script defaults to `%USERPROFILE%\keystore\macro-deck-client-keystore.jks`, alias `macro-deck-client`, and the current Android `versionCode`/`versionName`. Override them in the same file only when needed:
 
-```cmd
-set "BUILD_NUMBER=3001"
-set "VERSION_NUMBER=3.0.0"
-set "KEYSTORE_FILE_PATH=C:\path\to\keystore.jks"
-set "KEYSTORE_FILE_ALIAS=your_alias"
+```powershell
+$env:BUILD_NUMBER = '3001'
+$env:VERSION_NUMBER = '3.0.0'
+$env:KEYSTORE_FILE_PATH = 'C:\path\to\keystore.jks'
+$env:KEYSTORE_FILE_ALIAS = 'your_alias'
 ```
 
 ## GitHub Actions Android signing
@@ -121,9 +119,25 @@ export KEY_ID=app_store_connect_key_id
 export ISSUER_ID=app_store_connect_issuer_id
 export KEY_CONTENT=app_store_connect_private_key_content
 export MATCH_PASSWORD=match_repo_password
-./scripts/unix/build-ios-ipa.sh
+./scripts/macos/build_ios_ipa_bymac.sh
 ```
 
 The iOS script requires macOS, Xcode command line tools, CocoaPods, fastlane, and access to the signing certificates configured by fastlane match.
 
-Windows includes `run-ios.cmd` and `build-ios-ipa.cmd` only as explicit unsupported-platform guards. iOS local run and IPA builds require macOS.
+## Remove
+
+macOS:
+
+```bash
+./scripts/macos/remove_1_android_sdk_bymac.sh
+./scripts/macos/remove_2_fastlane_bymac.sh
+./scripts/macos/remove_3_ruby_bymac.sh
+```
+
+Windows PowerShell:
+
+```powershell
+.\scripts\windows\remove_1_android_sdk_bywin.ps1
+.\scripts\windows\remove_2_fastlane_bywin.ps1
+.\scripts\windows\remove_3_ruby_bywin.ps1
+```
