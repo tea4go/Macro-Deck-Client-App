@@ -12,6 +12,8 @@
 .PARAMETER Publish
   构建成功后，把 APK+AAB 发布到 GitHub Release（tag = v<versionName>+<versionCode>），
   release 说明取自项目根 RELEASE_NOTES.md。需已安装并登录 gh CLI。
+.PARAMETER Help
+  显示本帮助（参数说明与用法示例）后退出，不执行任何构建。
 .NOTES
   本脚本只负责 Android release 构建；Ruby、fastlane、Android SDK 安装分别由
   install_2_ruby_bywin.ps1、install_3_fastlane_bywin.ps1、install_4_android_sdk_bywin.ps1 处理。
@@ -21,14 +23,23 @@
   .\build_android_bywin.ps1
 .EXAMPLE
   .\build_android_bywin.ps1 -Publish
+.EXAMPLE
+  .\build_android_bywin.ps1 -Help
 #>
 param(
   [switch]$Check,
-  [switch]$Publish
+  [switch]$Publish,
+  [switch]$Help
 )
 
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '_common.ps1')
+
+# -Help：显示脚本文档头（.SYNOPSIS/.PARAMETER/.EXAMPLE）后退出
+if ($Help) {
+  Get-Help $PSCommandPath -Detailed
+  exit 0
+}
 
 $signingFile = Join-Path $script:RootDir 'scripts\local\android-signing.ps1'
 $defaultKeystore = Join-Path $env:USERPROFILE 'keystore\macro-deck-client-keystore.jks'
