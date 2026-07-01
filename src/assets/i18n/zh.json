@@ -57,7 +57,7 @@
     "secureConnection": "安全连接",
     "addFirstConnection": "点击下方按钮添加你的第一个连接！",
     "addConnection": "添加连接",
-    "clientId": "Client ID",
+    "clientId": "ID",
     "donate": "捐赠",
     "deleteConnectionConfirm": "确定删除连接 {{name}} 吗？"
   },
@@ -105,7 +105,7 @@
     "connectionLost": "与服务器的连接已断开",
     "retryIn": "将在 {{seconds}} 秒后重试连接...",
     "retryNow": "立即重试",
-    "clientId": "Client ID"
+    "clientId": "ID"
   },
   "connectionLost": {
     "title": "连接已断开",
