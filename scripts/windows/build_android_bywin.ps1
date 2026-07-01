@@ -35,9 +35,31 @@ param(
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot '_common.ps1')
 
-# -Help：显示脚本文档头（.SYNOPSIS/.PARAMETER/.EXAMPLE）后退出
+<#
+.SYNOPSIS
+  打印脚本用法。
+#>
+function Write-Usage {
+  Write-Host ""
+  Write-Banner -Title 'Android release 构建（Windows）' -Color Cyan
+  Write-Host ""
+  Write-Host "用法：" -ForegroundColor Cyan
+  Write-Host "  .\build_android_bywin.ps1            构建 release APK/AAB（不发布）"
+  Write-Host "  .\build_android_bywin.ps1 -Check     只检查构建环境，不构建"
+  Write-Host "  .\build_android_bywin.ps1 -Publish   构建后发布到 GitHub Release"
+  Write-Host "  .\build_android_bywin.ps1 -Help      显示本帮助"
+  Write-Host ""
+  Write-Host "参数：" -ForegroundColor Cyan
+  Write-Host "  -Check    只检查签名变量、npx、fastlane、JDK 是否就绪，不执行构建"
+  Write-Host "  -Publish  构建成功后把 APK+AAB 发布到 GitHub Release"
+  Write-Host "            (tag = v<versionName>+<versionCode>，说明取自 RELEASE_NOTES.md，需 gh CLI 已登录)"
+  Write-Host "  -Help     显示本帮助后退出"
+  Write-Host ""
+}
+
+# -Help：显示用法后退出
 if ($Help) {
-  Get-Help $PSCommandPath -Detailed
+  Write-Usage
   exit 0
 }
 

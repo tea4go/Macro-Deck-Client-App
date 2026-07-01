@@ -1149,6 +1149,38 @@ function Read-AndroidGradleValue([string]$Key) {
 
 <#
 .SYNOPSIS
+  写入 android/app/build.gradle 的 versionCode / versionName。
+.PARAMETER Key
+  'versionCode'（值为整数，不加引号）或 'versionName'（值加双引号）。
+.PARAMETER Value
+  要写入的值。
+.OUTPUTS
+  [bool] 写入成功返回 $true；文件或键不存在返回 $false。
+.NOTES
+  保留原行缩进；versionName 自动补双引号，versionCode 原样写整数。UTF-8 无 BOM 写回。
+#>
+function Set-AndroidGradleValue([string]$Key, [string]$Value) {
+  $gradleFile = Join-Path $script:RootDir 'android\app\build.gradle'
+  if (-not (Test-Path -LiteralPath $gradleFile)) {
+    Write-Fail "未找到 build.gradle：$gradleFile"
+    return $false
+  }
+  # versionName 带引号，versionCode 不带
+  $replacement = if ($Key -eq 'versionName') { "`${1}$Key `"$Value`"" } else { "`${1}$Key $Value" }
+  $pattern = "(?m)^(\s*)$([regex]::Escape($Key))\s+.+?\s*$"
+  $content = [System.IO.File]::ReadAllText($gradleFile)
+  if ($content -notmatch $pattern) {
+    Write-Fail "build.gradle 中未找到 $Key 行"
+    return $false
+  }
+  $content = [regex]::Replace($content, $pattern, $replacement)
+  [System.IO.File]::WriteAllText($gradleFile, $content, [System.Text.UTF8Encoding]::new($false))
+  Write-Ok "build.gradle 已设置 $Key = $Value"
+  return $true
+}
+
+<#
+.SYNOPSIS
   以 android/app/build.gradle 的 versionCode/versionName 为源，同步到 iOS 与 Web。
 .DESCRIPTION
   版本号唯一权威是 build.gradle。本函数读取它，写入：
