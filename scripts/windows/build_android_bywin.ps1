@@ -108,22 +108,20 @@ Windows 推荐方式：
   KEYSTORE_FILE_PASSWORD 必须由用户在 scripts\local\android-signing.ps1 中提供。
 #>
 function Require-AndroidReleaseEnv {
-  if ([string]::IsNullOrWhiteSpace($env:BUILD_NUMBER)) {
-    # 未显式指定 BUILD_NUMBER 时，读 build.gradle 当前 versionCode 再 +1 自动递增。
-    # （versionCode 每次发布必须递增；fastlane 随后会把新值写回 build.gradle 持久化。）
-    $currentCode = Read-AndroidGradleValue 'versionCode'
-    $parsed = 0
-    if ([int]::TryParse($currentCode, [ref]$parsed)) {
-      $env:BUILD_NUMBER = ($parsed + 1).ToString()
-      Write-Ok "versionCode 自动递增：$currentCode -> $env:BUILD_NUMBER"
-    } else {
-      Write-Warn "无法解析当前 versionCode（'$currentCode'），BUILD_NUMBER 回退为 1"
-      $env:BUILD_NUMBER = '1'
-    }
+  # 版本号始终以 build.gradle 为准（忽略会话中可能残留的 $env:BUILD_NUMBER/VERSION_NUMBER，
+  # 避免旧值覆盖）。versionCode 读当前值 +1 自动递增；versionName 用当前值。
+  # 需手动设定版本时用 sync_version_bywin.ps1 -VersionName/-VersionCode 改 build.gradle。
+  $currentCode = Read-AndroidGradleValue 'versionCode'
+  $parsed = 0
+  if ([int]::TryParse($currentCode, [ref]$parsed)) {
+    $env:BUILD_NUMBER = ($parsed + 1).ToString()
+    Write-Ok "versionCode 自动递增：$currentCode -> $env:BUILD_NUMBER"
+  } else {
+    Write-Warn "无法解析当前 versionCode（'$currentCode'），BUILD_NUMBER 回退为 1"
+    $env:BUILD_NUMBER = '1'
   }
-  if ([string]::IsNullOrWhiteSpace($env:VERSION_NUMBER)) {
-    $env:VERSION_NUMBER = Read-AndroidGradleValue 'versionName'
-  }
+  $env:VERSION_NUMBER = Read-AndroidGradleValue 'versionName'
+
   if ([string]::IsNullOrWhiteSpace($env:KEYSTORE_FILE_PATH)) {
     $env:KEYSTORE_FILE_PATH = $defaultKeystore
   }

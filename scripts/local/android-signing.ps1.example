@@ -4,9 +4,12 @@
 
 $env:KEYSTORE_FILE_PASSWORD = "你的密钥库密码"
 
-# 可选覆盖项（默认值来自 android\app\build.gradle 及以下路径）：
-# $env:BUILD_NUMBER = "3001"
-# $env:VERSION_NUMBER = "3.0.0"
+# 版本号说明：versionName/versionCode 始终以 android\app\build.gradle 为准
+#   （build_android 构建时 versionCode 自动 +1）。
+#   要手动设定版本，请用：scripts\windows\sync_version_bywin.ps1 -VersionName <名> -VersionCode <号>
+#   在此设 $env:BUILD_NUMBER / $env:VERSION_NUMBER 不会生效。
+
+# 可选覆盖项（keystore 路径与别名，默认值如下）：
 # $env:KEYSTORE_FILE_PATH = "$env:USERPROFILE\keystore\macro-deck-client-keystore.jks"
 # $env:KEYSTORE_FILE_ALIAS = "macro-deck-client"
 
