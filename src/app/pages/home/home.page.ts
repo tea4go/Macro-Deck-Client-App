@@ -308,7 +308,8 @@ export class HomePage implements OnInit, ViewWillEnter, ViewDidEnter, ViewDidLea
    * @returns 是否显示
    */
   public showDonateButton() {
-    return !this.diagnosticsService.isiOS();
+    //return !this.diagnosticsService.isiOS();
+    return false;
   }
 
   /**
