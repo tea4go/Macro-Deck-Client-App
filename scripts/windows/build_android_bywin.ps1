@@ -12,10 +12,14 @@
 .PARAMETER Check
   只检查签名变量、npx、fastlane 是否可用，不执行 Web/Android 构建。
 .PARAMETER Publish
-  仅发布：跳过构建，直接把已有 APK+AAB 发布到 GitHub Release
- （tag = v<versionName>+<versionCode>），版本号从 build.gradle 读取（不递增），
-  release 说明取自项目根 RELEASE_NOTES.md。需已安装并登录 gh CLI。
+  仅发布：跳过构建，直接把已有 APK+AAB 发布到 Release。
+  配合 -Platform 指定发布平台（github/gitee，默认 github）。
+  版本号从 build.gradle 读取（不递增），release 说明取自 RELEASE_NOTES.md。
   如需先构建再发布，请先 -Build 构建，再单独 -Publish 发布。
+.PARAMETER Platform
+  发布平台，仅与 -Publish 搭配使用。可选值：github（默认）、gitee。
+  - github：需已安装并登录 gh CLI
+  - gitee：需在 scripts\local\android-signing.ps1 中设置 GITEE_TOKEN 环境变量
 .PARAMETER Help
   显示本帮助（参数说明与用法示例）后退出，不执行任何构建。
 .NOTES
@@ -29,12 +33,16 @@
 .EXAMPLE
   .\build_android_bywin.ps1 -Publish
 .EXAMPLE
+  .\build_android_bywin.ps1 -Publish -Platform gitee
+.EXAMPLE
   .\build_android_bywin.ps1 -Help
 #>
 param(
   [switch]$Build,
   [switch]$Check,
   [switch]$Publish,
+  [ValidateSet('github', 'gitee')]
+  [string]$Platform = 'github',
   [switch]$Help
 )
 
@@ -50,18 +58,22 @@ function Write-Usage {
   Write-Banner -Title 'Android release 构建（Windows）' -Color Cyan
   Write-Host ""
   Write-Host "用法：" -ForegroundColor Cyan
-  Write-Host "  .\build_android_bywin.ps1 -Build     构建 release APK/AAB（不发布）"
-  Write-Host "  .\build_android_bywin.ps1 -Check     只检查构建环境，不构建"
-  Write-Host "  .\build_android_bywin.ps1 -Publish   仅发布：跳过构建，把已有产物发布到 GitHub Release"
-  Write-Host "  .\build_android_bywin.ps1 -Help      显示本帮助"
+  Write-Host "  .\build_android_bywin.ps1 -Build                    构建 release APK/AAB（不发布）"
+  Write-Host "  .\build_android_bywin.ps1 -Check                    只检查构建环境，不构建"
+  Write-Host "  .\build_android_bywin.ps1 -Publish                  发布到 GitHub Release（默认）"
+  Write-Host "  .\build_android_bywin.ps1 -Publish -Platform gitee  发布到 Gitee Release"
+  Write-Host "  .\build_android_bywin.ps1 -Help                     显示本帮助"
   Write-Host ""
   Write-Host "参数：" -ForegroundColor Cyan
-  Write-Host "  -Build    构建 release APK/AAB（不发布），versionCode 自动递增"
-  Write-Host "  -Check    只检查签名变量、npx、fastlane、JDK 是否就绪，不执行构建"
-  Write-Host "  -Publish  跳过构建，直接把已有 APK+AAB 发布到 GitHub Release"
-  Write-Host "            (版本号从 build.gradle 读取，不递增；tag = v<versionName>+<versionCode>)"
-  Write-Host "            (说明取自 RELEASE_NOTES.md，需 gh CLI 已登录)"
-  Write-Host "  -Help     显示本帮助后退出"
+  Write-Host "  -Build     构建 release APK/AAB（不发布），versionCode 自动递增"
+  Write-Host "  -Check     只检查签名变量、npx、fastlane、JDK 是否就绪，不执行构建"
+  Write-Host "  -Publish   跳过构建，直接把已有 APK+AAB 发布到 Release"
+  Write-Host "             (版本号从 build.gradle 读取，不递增；tag = v<versionName>+<versionCode>)"
+  Write-Host "             (说明取自 RELEASE_NOTES.md)"
+  Write-Host "  -Platform  发布平台（仅与 -Publish 搭配），可选：github（默认）、gitee"
+  Write-Host "             - github：需已安装并登录 gh CLI"
+  Write-Host "             - gitee：需在 android-signing.ps1 中设置 `$env:GITEE_TOKEN"
+  Write-Host "  -Help      显示本帮助后退出"
   Write-Host ""
   Write-Host "不带参数运行时显示本帮助。" -ForegroundColor Yellow
   Write-Host ""
@@ -160,7 +172,11 @@ function Require-AndroidReleaseEnv {
 
 # ─── 仅发布模式：跳过构建，直接发布已有产物 ─────────────────────────────────
 if ($Publish) {
-  Write-Banner '发布到 GitHub Release（跳过构建）'
+  # 加载本地签名配置（包含 GITEE_TOKEN 等敏感凭据）
+  Load-AndroidSigningPs1 -FilePath $signingFile
+
+  $platformLabel = if ($Platform -eq 'gitee') { 'Gitee' } else { 'GitHub' }
+  Write-Banner "发布到 $platformLabel Release（跳过构建）"
 
   # 从 build.gradle 读取版本号（不递增，沿用上次构建后的值）
   $env:BUILD_NUMBER = Read-AndroidGradleValue 'versionCode'
@@ -176,16 +192,7 @@ if ($Publish) {
   $apkPath = Join-Path $script:RootDir "android\app\build\outputs\apk\release\$outName.apk"
   $aabPath = Join-Path $script:RootDir "android\app\build\outputs\bundle\release\$outName.aab"
 
-  # 前置检查：gh CLI 已装且已登录、产物与说明文件齐全
-  if (-not (Get-CommandPath 'gh')) {
-    Write-Fail '未找到 gh CLI，无法发布。请先安装：https://cli.github.com/ 并运行 gh auth login'
-    exit 1
-  }
-  Invoke-NativeStream -Block { & gh auth status }
-  if ($LASTEXITCODE -ne 0) {
-    Write-Fail 'gh 未登录，请先运行：gh auth login'
-    exit 1
-  }
+  # 检查产物与说明文件齐全
   $notesFile = Join-Path $script:RootDir 'RELEASE_NOTES.md'
   if (-not (Test-Path -LiteralPath $notesFile)) {
     Write-Fail "未找到更新说明文件：$notesFile（请先编辑它作为 release 说明）"
@@ -194,25 +201,107 @@ if ($Publish) {
   foreach ($f in @($apkPath, $aabPath)) {
     if (-not (Test-Path -LiteralPath $f)) {
       Write-Fail "产物不存在，无法发布：$f"
-      Write-Fail '请先不带 -Publish 执行一次完整构建'
+      Write-Fail '请先 -Build 执行一次完整构建'
       exit 1
     }
   }
 
   $tag = "v$env:VERSION_NUMBER+$env:BUILD_NUMBER"
   $title = "MacroDeck Client v$env:VERSION_NUMBER ($env:BUILD_NUMBER)"
-  $repo = 'tea4go/Macro-Deck-Client-App'
+  $notes = Get-Content -LiteralPath $notesFile -Raw -Encoding UTF8
   Write-Host "  发布 tag: $tag" -ForegroundColor Cyan
   Write-Host "  上传产物: $outName.apk, $outName.aab" -ForegroundColor Cyan
+  Write-Host "  发布平台: $platformLabel" -ForegroundColor Cyan
 
-  Invoke-NativeStream -Block {
-    & gh release create $tag $apkPath $aabPath --title $title --notes-file $notesFile --repo $repo
+  if ($Platform -eq 'gitee') {
+    # ─── Gitee Release（通过 Gitee API v5）───────────────────────────────────
+    $giteeOwner = 'tea4go'
+    $giteeRepo  = 'Macro-Deck-Client-App'
+    $giteeToken = $env:GITEE_TOKEN
+    if ([string]::IsNullOrWhiteSpace($giteeToken)) {
+      Write-Fail '未设置 GITEE_TOKEN 环境变量。请在 scripts\local\android-signing.ps1 中添加：'
+      Write-Host '  $env:GITEE_TOKEN = "你的 Gitee 私人令牌"' -ForegroundColor Yellow
+      Write-Host '  获取令牌：https://gitee.com/personal_access_tokens' -ForegroundColor Yellow
+      exit 1
+    }
+
+    # 1) 创建 Release
+    $createUri = "https://gitee.com/api/v5/repos/$giteeOwner/$giteeRepo/releases"
+    $createBody = @{
+      access_token = $giteeToken
+      tag_name     = $tag
+      name         = $title
+      body         = $notes
+      target_commitish = 'main'
+    }
+    Write-Host "  正在创建 Gitee Release..." -ForegroundColor Cyan
+    try {
+      $release = Invoke-RestMethod -Method Post -Uri $createUri -Body $createBody -ErrorAction Stop
+    } catch {
+      Write-Fail "Gitee Release 创建失败：$($_.Exception.Message)"
+      exit 1
+    }
+    $releaseId = $release.id
+    Write-Ok "Gitee Release 已创建（ID: $releaseId）"
+
+    # 2) 上传 APK 和 AAB
+    foreach ($filePath in @($apkPath, $aabPath)) {
+      $fileName = [IO.Path]::GetFileName($filePath)
+      Write-Host "  正在上传 $fileName ..." -ForegroundColor Cyan
+      $uploadUri = "https://gitee.com/api/v5/repos/$giteeOwner/$giteeRepo/releases/$releaseId/attach_files"
+      try {
+        $fileBytes = [IO.File]::ReadAllBytes($filePath)
+        $boundary = [Guid]::NewGuid().ToString()
+        $LF = "`r`n"
+        $bodyLines = @(
+          "--$boundary",
+          "Content-Disposition: form-data; name=`"access_token`"$LF",
+          $giteeToken,
+          "--$boundary",
+          "Content-Disposition: form-data; name=`"file`"; filename=`"$fileName`"",
+          "Content-Type: application/octet-stream$LF"
+        ) -join $LF
+        $bodyEnd = "$LF--$boundary--$LF"
+        $encoding = [Text.Encoding]::UTF8
+        $bodyPreamble = $encoding.GetBytes($bodyLines)
+        $bodyEpilogue = $encoding.GetBytes($bodyEnd)
+        $fullBody = New-Object byte[] ($bodyPreamble.Length + $fileBytes.Length + $bodyEpilogue.Length)
+        [Buffer]::BlockCopy($bodyPreamble, 0, $fullBody, 0, $bodyPreamble.Length)
+        [Buffer]::BlockCopy($fileBytes, 0, $fullBody, $bodyPreamble.Length, $fileBytes.Length)
+        [Buffer]::BlockCopy($bodyEpilogue, 0, $fullBody, $bodyPreamble.Length + $fileBytes.Length, $bodyEpilogue.Length)
+        $null = Invoke-RestMethod -Method Post -Uri $uploadUri `
+          -ContentType "multipart/form-data; boundary=$boundary" `
+          -Body $fullBody -ErrorAction Stop
+        Write-Ok "$fileName 上传成功"
+      } catch {
+        Write-Fail "$fileName 上传失败：$($_.Exception.Message)"
+        exit 1
+      }
+    }
+    Write-Ok "已发布到 Gitee Release：https://gitee.com/$giteeOwner/$giteeRepo/releases/tag/$tag"
+
+  } else {
+    # ─── GitHub Release（通过 gh CLI）────────────────────────────────────────
+    if (-not (Get-CommandPath 'gh')) {
+      Write-Fail '未找到 gh CLI，无法发布。请先安装：https://cli.github.com/ 并运行 gh auth login'
+      exit 1
+    }
+    Invoke-NativeStream -Block { & gh auth status }
+    if ($LASTEXITCODE -ne 0) {
+      Write-Fail 'gh 未登录，请先运行：gh auth login'
+      exit 1
+    }
+    $repo = 'tea4go/Macro-Deck-Client-App'
+    Invoke-NativeStream -Block {
+      & gh release create $tag $apkPath $aabPath --title $title --notes-file $notesFile --repo $repo
+    }
+    if ($LASTEXITCODE -ne 0) {
+      Write-Fail "GitHub Release 发布失败（tag 可能已存在，请提升 versionCode 后重试）"
+      exit 1
+    }
+    Write-Ok "已发布到 GitHub Release：https://github.com/$repo/releases/tag/$tag"
   }
-  if ($LASTEXITCODE -ne 0) {
-    Write-Fail "GitHub Release 发布失败（tag 可能已存在，请提升 versionCode 后重试）"
-    exit 1
-  }
-  Write-Ok "已发布到 GitHub Release：https://github.com/$repo/releases/tag/$tag"
+
   exit 0
 }
 

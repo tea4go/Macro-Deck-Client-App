@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: ""
-title: Macro Deck 跨平台客户端编排中心
+title: Macro Deck 客户端（Capacitor 跨平台应用）
 scope:
     - README.md
     - package.json

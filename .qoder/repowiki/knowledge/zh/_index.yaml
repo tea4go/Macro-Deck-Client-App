@@ -3,11 +3,11 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-02T09:11:13Z"
+exported_at: "2026-07-02T14:07:44Z"
 modules:
     "":
-        dir_name: Macro Deck 跨平台客户端编排中心
-        title: Macro Deck 跨平台客户端编排中心
+        dir_name: Macro Deck 客户端（Capacitor 跨平台应用）
+        title: Macro Deck 客户端（Capacitor 跨平台应用）
         scope:
             - README.md
             - package.json
@@ -371,8 +371,8 @@ modules:
         depends_on: []
         related_to: []
     app/core:
-        dir_name: 应用引导与全局初始化
-        title: 应用引导与全局初始化
+        dir_name: 应用根模块与引导入口
+        title: 应用根模块与引导入口
         scope:
             - src/app/app.component.html
             - src/app/app.component.spec.ts
@@ -484,8 +484,8 @@ modules:
         depends_on: []
         related_to: []
     scripts:
-        dir_name: 跨平台构建与环境自动化脚本
-        title: 跨平台构建与环境自动化脚本
+        dir_name: 跨平台构建与发布脚本集（macOS_Windows）
+        title: 跨平台构建与发布脚本集（macOS/Windows）
         scope:
             - scripts/
         source_files: []

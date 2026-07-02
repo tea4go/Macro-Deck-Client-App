@@ -16,3 +16,7 @@ $env:KEYSTORE_FILE_PASSWORD = "你的密钥库密码"
 # 还没有密钥库？先创建默认密钥库：
 #   keytool -genkey -v -keystore "$env:USERPROFILE\keystore\macro-deck-client-keystore.jks" `
 #     -keyalg RSA -keysize 2048 -validity 10000 -alias macro-deck-client
+
+# Gitee 发布令牌（仅 -Publish -Platform gitee 时需要）：
+# 获取令牌：https://gitee.com/personal_access_tokens
+# $env:GITEE_TOKEN = "你的 Gitee 私人令牌"

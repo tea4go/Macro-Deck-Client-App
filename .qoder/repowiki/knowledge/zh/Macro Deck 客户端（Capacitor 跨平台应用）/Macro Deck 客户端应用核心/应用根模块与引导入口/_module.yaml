@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: app/core
-title: 应用引导与全局初始化
+title: 应用根模块与引导入口
 scope:
     - src/app/app.component.html
     - src/app/app.component.spec.ts
