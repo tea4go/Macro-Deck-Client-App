@@ -7,28 +7,32 @@
   2) 校验签名环境：未设置的 BUILD_NUMBER/VERSION_NUMBER 自动从 android\app\build.gradle 读取 versionCode/versionName
   3) 用 Ionic production 配置构建 Web 资源，再执行 Capacitor Android sync
   4) 在 android 目录下按 fastlane 官方推荐执行 bundle exec fastlane build 产出 APK/AAB
+.PARAMETER Build
+  构建 release APK/AAB（不发布）。versionCode 自动递增。
 .PARAMETER Check
   只检查签名变量、npx、fastlane 是否可用，不执行 Web/Android 构建。
 .PARAMETER Publish
   仅发布：跳过构建，直接把已有 APK+AAB 发布到 GitHub Release
  （tag = v<versionName>+<versionCode>），版本号从 build.gradle 读取（不递增），
   release 说明取自项目根 RELEASE_NOTES.md。需已安装并登录 gh CLI。
-  如需先构建再发布，请不带 -Publish 运行构建后，再单独执行 -Publish。
+  如需先构建再发布，请先 -Build 构建，再单独 -Publish 发布。
 .PARAMETER Help
   显示本帮助（参数说明与用法示例）后退出，不执行任何构建。
 .NOTES
   本脚本只负责 Android release 构建；Ruby、fastlane、Android SDK 安装分别由
   install_2_ruby_bywin.ps1、install_3_fastlane_bywin.ps1、install_4_android_sdk_bywin.ps1 处理。
+  不带任何参数运行时，默认显示本帮助。
+.EXAMPLE
+  .\build_android_bywin.ps1 -Build
 .EXAMPLE
   .\build_android_bywin.ps1 -Check
-.EXAMPLE
-  .\build_android_bywin.ps1
 .EXAMPLE
   .\build_android_bywin.ps1 -Publish
 .EXAMPLE
   .\build_android_bywin.ps1 -Help
 #>
 param(
+  [switch]$Build,
   [switch]$Check,
   [switch]$Publish,
   [switch]$Help
@@ -46,22 +50,25 @@ function Write-Usage {
   Write-Banner -Title 'Android release 构建（Windows）' -Color Cyan
   Write-Host ""
   Write-Host "用法：" -ForegroundColor Cyan
-  Write-Host "  .\build_android_bywin.ps1            构建 release APK/AAB（不发布）"
+  Write-Host "  .\build_android_bywin.ps1 -Build     构建 release APK/AAB（不发布）"
   Write-Host "  .\build_android_bywin.ps1 -Check     只检查构建环境，不构建"
   Write-Host "  .\build_android_bywin.ps1 -Publish   仅发布：跳过构建，把已有产物发布到 GitHub Release"
   Write-Host "  .\build_android_bywin.ps1 -Help      显示本帮助"
   Write-Host ""
   Write-Host "参数：" -ForegroundColor Cyan
+  Write-Host "  -Build    构建 release APK/AAB（不发布），versionCode 自动递增"
   Write-Host "  -Check    只检查签名变量、npx、fastlane、JDK 是否就绪，不执行构建"
   Write-Host "  -Publish  跳过构建，直接把已有 APK+AAB 发布到 GitHub Release"
   Write-Host "            (版本号从 build.gradle 读取，不递增；tag = v<versionName>+<versionCode>)"
   Write-Host "            (说明取自 RELEASE_NOTES.md，需 gh CLI 已登录)"
   Write-Host "  -Help     显示本帮助后退出"
   Write-Host ""
+  Write-Host "不带参数运行时显示本帮助。" -ForegroundColor Yellow
+  Write-Host ""
 }
 
-# -Help：显示用法后退出
-if ($Help) {
+# -Help 或无参数：显示用法后退出
+if ($Help -or (-not $Build -and -not $Check -and -not $Publish)) {
   Write-Usage
   exit 0
 }
