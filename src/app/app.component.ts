@@ -16,6 +16,8 @@ import {IonicModule, ModalController} from "@ionic/angular";
 import {I18nService} from "./services/i18n/i18n.service";
 import {UpdateService} from "./services/update/update.service";
 import {UpdateModalComponent} from "./pages/shared/modals/update-modal/update-modal.component";
+import {SwUpdate, VersionReadyEvent} from "@angular/service-worker";
+import {filter} from "rxjs/operators";
 
 /** 应用根组件，负责初始化各项服务并监听深度链接 */
 @Component({
@@ -38,7 +40,8 @@ export class AppComponent implements OnInit {
               private themeService: ThemeService,
               private i18nService: I18nService,
               private updateService: UpdateService,
-              private modalController: ModalController) {
+              private modalController: ModalController,
+              private swUpdate: SwUpdate) {
   }
 
   /** 根页面组件，Web 版本使用 WebHomePage，原生版本使用 HomePage */
@@ -71,6 +74,19 @@ export class AppComponent implements OnInit {
         AppComponent.quickSetupLinkScanned.emit(data);
       }
     });
+
+    // 监听 Service Worker 版本更新：新版本就绪后自动激活并刷新页面，
+    // 确保 i18n 等静态资源在 APK 更新后能及时生效（而非从 SW 缓存读取旧版）
+    this.swUpdate.versionUpdates.pipe(
+      filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY')
+    ).subscribe(() => {
+      this.swUpdate.activateUpdate().then(() => document.location.reload());
+    });
+
+    // 启动时主动触发一次 SW 更新检查，加速新版本检测
+    if (this.swUpdate.isEnabled) {
+      this.swUpdate.checkForUpdate().catch(() => { /* 静默 */ });
+    }
 
     // 启动时静默检查更新（仅 Android，不阻塞启动）
     this.checkForUpdate();
