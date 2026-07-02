@@ -3,11 +3,11 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-02T15:08:44Z"
+exported_at: "2026-07-02T16:05:37Z"
 modules:
     "":
-        dir_name: Macro Deck 客户端（Capacitor 跨平台应用）
-        title: Macro Deck 客户端（Capacitor 跨平台应用）
+        dir_name: Macro Deck 跨平台客户端（Angular_Ionic + Capacitor）
+        title: Macro Deck 跨平台客户端（Angular/Ionic + Capacitor）
         scope:
             - README.md
             - package.json
@@ -361,8 +361,8 @@ modules:
         related_to:
             - path: scripts
     app:
-        dir_name: Macro Deck 客户端应用核心
-        title: Macro Deck 客户端应用核心
+        dir_name: Macro Deck 跨平台控制器应用
+        title: Macro Deck 跨平台控制器应用
         scope:
             - src/
         source_files: []
@@ -484,8 +484,8 @@ modules:
         depends_on: []
         related_to: []
     scripts:
-        dir_name: 跨平台构建与发布脚本集（macOS_Windows）
-        title: 跨平台构建与发布脚本集（macOS/Windows）
+        dir_name: 跨平台构建与发布脚本（macOS Bash _ Windows PowerShell）
+        title: 跨平台构建与发布脚本（macOS Bash / Windows PowerShell）
         scope:
             - scripts/
         source_files: []
