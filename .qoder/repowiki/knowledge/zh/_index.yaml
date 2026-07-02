@@ -3,7 +3,7 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-02T08:51:04Z"
+exported_at: "2026-07-02T09:11:13Z"
 modules:
     "":
         dir_name: Macro Deck 跨平台客户端编排中心
@@ -371,8 +371,8 @@ modules:
         depends_on: []
         related_to: []
     app/core:
-        dir_name: 应用根模块与启动引导
-        title: 应用根模块与启动引导
+        dir_name: 应用引导与全局初始化
+        title: 应用引导与全局初始化
         scope:
             - src/app/app.component.html
             - src/app/app.component.spec.ts

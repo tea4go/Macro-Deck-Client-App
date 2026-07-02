@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom, timeout, catchError, of } from 'rxjs';
+import { App } from '@capacitor/app';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { FileOpener } from '@capacitor-community/file-opener';
-import { environment } from '../../../environments/environment';
 import { DiagnosticService } from '../diagnostic/diagnostic.service';
 import { SettingsService } from '../settings/settings.service';
 
@@ -29,7 +29,7 @@ export interface UpdateInfo {
 /**
  * 应用内更新服务（仅 Android）。
  * 查 GitHub 最新 release，解析 APK 资产名 MacroDeckClient-<name>-<code>.apk
- * 得远端版本，与本地 environment.versionCode 比对；可下载 APK 并触发系统安装器。
+ * 得远端版本，与本地 App.getInfo().build 运行时版本号比对；可下载 APK 并触发系统安装器。
  */
 @Injectable({
   providedIn: 'root'
@@ -76,8 +76,12 @@ export class UpdateService {
       return none;
     }
 
+    // 运行时读取当前实际安装的 versionCode（而非编译时常量 environment.versionCode），
+    // 确保 APK 通过系统安装器更新后能正确识别已升级
+    const appInfo = await App.getInfo();
+    const installedVersionCode = parseInt(appInfo.build, 10) || 0;
     const info: UpdateInfo = {
-      hasUpdate: parsed.versionCode > environment.versionCode,
+      hasUpdate: parsed.versionCode > installedVersionCode,
       versionName: parsed.versionName,
       versionCode: parsed.versionCode,
       downloadUrl: apkAsset.browser_download_url,

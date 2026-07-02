@@ -6,10 +6,10 @@
 
 <ion-content class="ion-padding">
   <ion-text>
-    <h4>{{ 'update.newVersionTitle' | translate:{ version: info.versionName } }}</h4>
+    <h4 class="new-version-title">{{ 'update.newVersionTitle' | translate:{ version: info.versionName } }}</h4>
     <p class="text-muted">
-      {{ 'update.currentVersion' | translate }}: {{ 'v' }}{{ environment.version }} ({{ environment.versionCode }})
-      &rarr; v{{ info.versionName }} ({{ info.versionCode }})
+      {{ 'update.currentVersion' | translate }}: v{{ environment.version }}.{{ environment.versionCode }}
+      &rarr; v{{ info.versionName }}.{{ info.versionCode }}
     </p>
     @if (info.releaseNotes) {
       <div class="mt-3">

@@ -10,8 +10,10 @@
 .PARAMETER Check
   只检查签名变量、npx、fastlane 是否可用，不执行 Web/Android 构建。
 .PARAMETER Publish
-  构建成功后，把 APK+AAB 发布到 GitHub Release（tag = v<versionName>+<versionCode>），
+  仅发布：跳过构建，直接把已有 APK+AAB 发布到 GitHub Release
+ （tag = v<versionName>+<versionCode>），版本号从 build.gradle 读取（不递增），
   release 说明取自项目根 RELEASE_NOTES.md。需已安装并登录 gh CLI。
+  如需先构建再发布，请不带 -Publish 运行构建后，再单独执行 -Publish。
 .PARAMETER Help
   显示本帮助（参数说明与用法示例）后退出，不执行任何构建。
 .NOTES
@@ -46,13 +48,14 @@ function Write-Usage {
   Write-Host "用法：" -ForegroundColor Cyan
   Write-Host "  .\build_android_bywin.ps1            构建 release APK/AAB（不发布）"
   Write-Host "  .\build_android_bywin.ps1 -Check     只检查构建环境，不构建"
-  Write-Host "  .\build_android_bywin.ps1 -Publish   构建后发布到 GitHub Release"
+  Write-Host "  .\build_android_bywin.ps1 -Publish   仅发布：跳过构建，把已有产物发布到 GitHub Release"
   Write-Host "  .\build_android_bywin.ps1 -Help      显示本帮助"
   Write-Host ""
   Write-Host "参数：" -ForegroundColor Cyan
   Write-Host "  -Check    只检查签名变量、npx、fastlane、JDK 是否就绪，不执行构建"
-  Write-Host "  -Publish  构建成功后把 APK+AAB 发布到 GitHub Release"
-  Write-Host "            (tag = v<versionName>+<versionCode>，说明取自 RELEASE_NOTES.md，需 gh CLI 已登录)"
+  Write-Host "  -Publish  跳过构建，直接把已有 APK+AAB 发布到 GitHub Release"
+  Write-Host "            (版本号从 build.gradle 读取，不递增；tag = v<versionName>+<versionCode>)"
+  Write-Host "            (说明取自 RELEASE_NOTES.md，需 gh CLI 已登录)"
   Write-Host "  -Help     显示本帮助后退出"
   Write-Host ""
 }
@@ -148,6 +151,65 @@ function Require-AndroidReleaseEnv {
   return $true
 }
 
+# ─── 仅发布模式：跳过构建，直接发布已有产物 ─────────────────────────────────
+if ($Publish) {
+  Write-Banner '发布到 GitHub Release（跳过构建）'
+
+  # 从 build.gradle 读取版本号（不递增，沿用上次构建后的值）
+  $env:BUILD_NUMBER = Read-AndroidGradleValue 'versionCode'
+  $env:VERSION_NUMBER = Read-AndroidGradleValue 'versionName'
+  if ([string]::IsNullOrWhiteSpace($env:BUILD_NUMBER) -or [string]::IsNullOrWhiteSpace($env:VERSION_NUMBER)) {
+    Write-Fail '无法从 build.gradle 读取版本号，请先执行一次构建'
+    exit 1
+  }
+  Write-Ok "BUILD_NUMBER=$env:BUILD_NUMBER"
+  Write-Ok "VERSION_NUMBER=$env:VERSION_NUMBER"
+
+  $outName = "MacroDeckClient-$env:VERSION_NUMBER-$env:BUILD_NUMBER"
+  $apkPath = Join-Path $script:RootDir "android\app\build\outputs\apk\release\$outName.apk"
+  $aabPath = Join-Path $script:RootDir "android\app\build\outputs\bundle\release\$outName.aab"
+
+  # 前置检查：gh CLI 已装且已登录、产物与说明文件齐全
+  if (-not (Get-CommandPath 'gh')) {
+    Write-Fail '未找到 gh CLI，无法发布。请先安装：https://cli.github.com/ 并运行 gh auth login'
+    exit 1
+  }
+  Invoke-NativeStream -Block { & gh auth status }
+  if ($LASTEXITCODE -ne 0) {
+    Write-Fail 'gh 未登录，请先运行：gh auth login'
+    exit 1
+  }
+  $notesFile = Join-Path $script:RootDir 'RELEASE_NOTES.md'
+  if (-not (Test-Path -LiteralPath $notesFile)) {
+    Write-Fail "未找到更新说明文件：$notesFile（请先编辑它作为 release 说明）"
+    exit 1
+  }
+  foreach ($f in @($apkPath, $aabPath)) {
+    if (-not (Test-Path -LiteralPath $f)) {
+      Write-Fail "产物不存在，无法发布：$f"
+      Write-Fail '请先不带 -Publish 执行一次完整构建'
+      exit 1
+    }
+  }
+
+  $tag = "v$env:VERSION_NUMBER+$env:BUILD_NUMBER"
+  $title = "MacroDeck Client v$env:VERSION_NUMBER ($env:BUILD_NUMBER)"
+  $repo = 'tea4go/Macro-Deck-Client-App'
+  Write-Host "  发布 tag: $tag" -ForegroundColor Cyan
+  Write-Host "  上传产物: $outName.apk, $outName.aab" -ForegroundColor Cyan
+
+  Invoke-NativeStream -Block {
+    & gh release create $tag $apkPath $aabPath --title $title --notes-file $notesFile --repo $repo
+  }
+  if ($LASTEXITCODE -ne 0) {
+    Write-Fail "GitHub Release 发布失败（tag 可能已存在，请提升 versionCode 后重试）"
+    exit 1
+  }
+  Write-Ok "已发布到 GitHub Release：https://github.com/$repo/releases/tag/$tag"
+  exit 0
+}
+
+# ─── 构建流程 ──────────────────────────────────────────────────────────────────
 Write-Banner '构建 Android release'
 
 Load-AndroidSigningPs1 -FilePath $signingFile
@@ -192,47 +254,5 @@ $apkPath = Join-Path $script:RootDir "android\app\build\outputs\apk\release\$out
 $aabPath = Join-Path $script:RootDir "android\app\build\outputs\bundle\release\$outName.aab"
 Write-Ok "Android release APK 产物: $apkPath"
 Write-Ok "Android release AAB 产物: $aabPath"
-
-# ─── 发布到 GitHub Release（仅 -Publish 时）───────────────────────────────────
-if ($Publish) {
-  Write-Banner '发布到 GitHub Release'
-
-  # 前置检查：gh CLI 已装且已登录、产物与说明文件齐全
-  if (-not (Get-CommandPath 'gh')) {
-    Write-Fail '未找到 gh CLI，无法发布。请先安装：https://cli.github.com/ 并运行 gh auth login'
-    exit 1
-  }
-  Invoke-NativeStream -Block { & gh auth status }
-  if ($LASTEXITCODE -ne 0) {
-    Write-Fail 'gh 未登录，请先运行：gh auth login'
-    exit 1
-  }
-  $notesFile = Join-Path $script:RootDir 'RELEASE_NOTES.md'
-  if (-not (Test-Path -LiteralPath $notesFile)) {
-    Write-Fail "未找到更新说明文件：$notesFile（请先编辑它作为 release 说明）"
-    exit 1
-  }
-  foreach ($f in @($apkPath, $aabPath)) {
-    if (-not (Test-Path -LiteralPath $f)) {
-      Write-Fail "产物不存在，无法发布：$f"
-      exit 1
-    }
-  }
-
-  $tag = "v$env:VERSION_NUMBER+$env:BUILD_NUMBER"
-  $title = "MacroDeck Client v$env:VERSION_NUMBER ($env:BUILD_NUMBER)"
-  $repo = 'tea4go/Macro-Deck-Client-App'
-  Write-Host "  发布 tag: $tag" -ForegroundColor Cyan
-  Write-Host "  上传产物: $outName.apk, $outName.aab" -ForegroundColor Cyan
-
-  Invoke-NativeStream -Block {
-    & gh release create $tag $apkPath $aabPath --title $title --notes-file $notesFile --repo $repo
-  }
-  if ($LASTEXITCODE -ne 0) {
-    Write-Fail "GitHub Release 发布失败（tag 可能已存在，请提升 versionCode 后重试）"
-    exit 1
-  }
-  Write-Ok "已发布到 GitHub Release：https://github.com/$repo/releases/tag/$tag"
-}
 
 exit 0
