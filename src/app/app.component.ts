@@ -75,17 +75,20 @@ export class AppComponent implements OnInit {
       }
     });
 
-    // 监听 Service Worker 版本更新：新版本就绪后自动激活并刷新页面，
-    // 确保 i18n 等静态资源在 APK 更新后能及时生效（而非从 SW 缓存读取旧版）
-    this.swUpdate.versionUpdates.pipe(
-      filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY')
-    ).subscribe(() => {
-      this.swUpdate.activateUpdate().then(() => document.location.reload());
-    });
+    // Service Worker 更新仅在 Web（PWA）平台启用。
+    // 原生 Android/iOS 不需要 SW：APK 本身就是更新单元，
+    // SW 在 Capacitor 的 http://localhost 环境下会因缓存与当前资源不匹配
+    // 导致无限 reload 循环（闪退）。
+    if (!this.diagnosticService.isiOSorAndroid()) {
+      this.swUpdate.versionUpdates.pipe(
+        filter((evt): evt is VersionReadyEvent => evt.type === 'VERSION_READY')
+      ).subscribe(() => {
+        this.swUpdate.activateUpdate().then(() => document.location.reload());
+      });
 
-    // 启动时主动触发一次 SW 更新检查，加速新版本检测
-    if (this.swUpdate.isEnabled) {
-      this.swUpdate.checkForUpdate().catch(() => { /* 静默 */ });
+      if (this.swUpdate.isEnabled) {
+        this.swUpdate.checkForUpdate().catch(() => { /* 静默 */ });
+      }
     }
 
     // 启动时静默检查更新（仅 Android，不阻塞启动）
