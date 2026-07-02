@@ -41,6 +41,7 @@
     "languageSystem": "System",
     "languageEnglish": "English",
     "languageChinese": "Chinese",
+    "updateSource": "Update source",
     "screenBurnInWarning": "Displaying a static image for a long time can cause screen burn-in on some screens.",
     "menuButtonHint": "To access the menu, swipe from the left edge of the screen"
   },

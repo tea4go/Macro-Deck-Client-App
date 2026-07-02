@@ -41,6 +41,7 @@
     "languageSystem": "跟随系统",
     "languageEnglish": "English",
     "languageChinese": "中文",
+    "updateSource": "更新源",
     "screenBurnInWarning": "长时间显示静态画面可能导致某些屏幕出现烧屏。",
     "menuButtonHint": "从屏幕左侧边缘向右滑动即可打开菜单"
   },

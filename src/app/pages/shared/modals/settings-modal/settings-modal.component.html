@@ -77,6 +77,14 @@
     </ion-item>
 
     @if (isAndroid()) {
+      <ion-item>
+        <ion-icon slot="start" class="mdi mdi-server-network d-flex align-items-center"></ion-icon>
+        <ion-select [(ngModel)]="updateSource" [label]="'settings.updateSource' | translate">
+          <ion-select-option value="gitee">Gitee</ion-select-option>
+          <ion-select-option value="github">GitHub</ion-select-option>
+        </ion-select>
+      </ion-item>
+
       <ion-item button="true" (click)="checkForUpdate()">
         <ion-icon slot="start" class="mdi mdi-cloud-download d-flex align-items-center"></ion-icon>
         <ion-label>{{ 'update.checkForUpdate' | translate }}</ion-label>

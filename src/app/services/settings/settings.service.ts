@@ -21,6 +21,7 @@ const usbUseSslKey: string = "usb_use_ssl";
 const buttonWidgetBorderStyleKey: string = "button_widget_border_style";
 const languageKey: string = "language";
 const skippedUpdateVersionKey: string = "skipped_update_version";
+const updateSourceKey: string = "update_source";
 
 /** 设置服务，管理应用各项配置的持久化存取 */
 @Injectable({
@@ -46,6 +47,22 @@ export class SettingsService {
    */
   public async getSkippedVersion(): Promise<number> {
     return await this.storage.get(skippedUpdateVersionKey) ?? 0;
+  }
+
+  /**
+   * 设置更新检查源
+   * @param source 'github' 或 'gitee'，默认 'gitee'
+   */
+  public async setUpdateSource(source: 'github' | 'gitee') {
+    await this.storage.set(updateSourceKey, source);
+  }
+
+  /**
+   * 获取更新检查源
+   * @returns 'github' 或 'gitee'，默认 'gitee'（国内访问更快）
+   */
+  public async getUpdateSource(): Promise<'github' | 'gitee'> {
+    return await this.storage.get(updateSourceKey) ?? 'gitee';
   }
 
   /**

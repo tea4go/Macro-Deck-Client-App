@@ -55,6 +55,8 @@ export class SettingsModalComponent  implements OnInit {
   buttonWidgetBorderStyle: string = "0";
   /** 界面语言（字符串形式的枚举值） */
   language: string = "0";
+  /** 更新检查源（'github' 或 'gitee'） */
+  updateSource: string = "gitee";
 
   constructor(private modalController: ModalController,
               private settingsService: SettingsService,
@@ -126,6 +128,11 @@ export class SettingsModalComponent  implements OnInit {
     await this.settingsService.setUsbUseSsl(this.usbUseSsl);
     await this.settingsService.setButtonWidgetBorderStyle(Number.parseInt(this.buttonWidgetBorderStyle));
 
+    // 保存更新源设置（仅 Android 有效）
+    if (this.diagnosticService.isAndroid()) {
+      await this.settingsService.setUpdateSource(this.updateSource as 'github' | 'gitee');
+    }
+
     // 应用语言设置（即时生效 + 持久化）
     await this.i18nService.setLanguage(Number.parseInt(this.language) as LanguageType);
 
@@ -151,6 +158,7 @@ export class SettingsModalComponent  implements OnInit {
     this.usbUseSsl = await this.settingsService.getUsbUseSsl();
     this.buttonWidgetBorderStyle = (await this.settingsService.getButtonWidgetBorderStyle()).toString();
     this.language = (await this.settingsService.getLanguage()).toString();
+    this.updateSource = await this.settingsService.getUpdateSource();
   }
 
   /**

@@ -1,9 +1,6 @@
 # 更新说明
 
-<!--
-  每次发布前编辑此文件，内容将作为 GitHub Release 的说明（release body）。
-  发布命令：.\scripts\windows\build_android_bywin.ps1 -Publish
--->
-
 ## 本次更新
-- 
+- 增加国际化，支持中文、英文。
+- 增加版本自动升级功能。
+- 增加多版本服务器，支持Github和Gitee两个版本服务器。

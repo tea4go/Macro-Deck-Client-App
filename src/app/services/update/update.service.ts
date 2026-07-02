@@ -10,7 +10,12 @@ import { SettingsService } from '../settings/settings.service';
 /** GitHub 仓库（更新源，public 仓库无需 token） */
 const GITHUB_OWNER = 'tea4go';
 const GITHUB_REPO = 'Macro-Deck-Client-App';
-const LATEST_RELEASE_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`;
+const GITHUB_LATEST_RELEASE_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`;
+
+/** Gitee 仓库（更新源，国内访问更快） */
+const GITEE_OWNER = 'tea4go';
+const GITEE_REPO = 'Macro-Deck-Client-App';
+const GITEE_LATEST_RELEASE_API = `https://gitee.com/api/v5/repos/${GITEE_OWNER}/${GITEE_REPO}/releases/latest`;
 
 /** 检查更新的结果 */
 export interface UpdateInfo {
@@ -28,8 +33,9 @@ export interface UpdateInfo {
 
 /**
  * 应用内更新服务（仅 Android）。
- * 查 GitHub 最新 release，解析 APK 资产名 MacroDeckClient-<name>-<code>.apk
- * 得远端版本，与本地 App.getInfo().build 运行时版本号比对；可下载 APK 并触发系统安装器。
+ * 支持 GitHub / Gitee 双源检查，根据用户设置选择更新源。
+ * 解析 APK 资产名 MacroDeckClient-<name>-<code>.apk 得远端版本，
+ * 与本地 App.getInfo().build 运行时版本号比对；可下载 APK 并触发系统安装器。
  */
 @Injectable({
   providedIn: 'root'
@@ -53,9 +59,13 @@ export class UpdateService {
       return none;
     }
 
-    // 拉取最新 release（10 秒超时；国内访问 GitHub 可能慢，失败静默）
+    // 根据用户设置选择更新源（默认 gitee，国内访问更快）
+    const source = await this.settingsService.getUpdateSource();
+    const apiUrl = source === 'gitee' ? GITEE_LATEST_RELEASE_API : GITHUB_LATEST_RELEASE_API;
+
+    // 拉取最新 release（10 秒超时；失败静默）
     const release: any = await firstValueFrom(
-      this.http.get(LATEST_RELEASE_API).pipe(
+      this.http.get(apiUrl).pipe(
         timeout(10000),
         catchError(() => of(null))
       )
