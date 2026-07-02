@@ -3,7 +3,7 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-02T14:07:44Z"
+exported_at: "2026-07-02T15:08:44Z"
 modules:
     "":
         dir_name: Macro Deck 客户端（Capacitor 跨平台应用）

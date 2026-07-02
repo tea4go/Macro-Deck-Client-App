@@ -245,25 +245,23 @@ if ($Publish) {
     Write-Ok "Gitee Release 已创建（ID: $releaseId）"
 
     # 2) 上传 APK 和 AAB
+    #    Gitee API 上传附件时，access_token 需放在 URL 查询参数中（form body 里会 401）
     foreach ($filePath in @($apkPath, $aabPath)) {
       $fileName = [IO.Path]::GetFileName($filePath)
       Write-Host "  正在上传 $fileName ..." -ForegroundColor Cyan
-      $uploadUri = "https://gitee.com/api/v5/repos/$giteeOwner/$giteeRepo/releases/$releaseId/attach_files"
+      $uploadUri = "https://gitee.com/api/v5/repos/$giteeOwner/$giteeRepo/releases/$releaseId/attach_files?access_token=$giteeToken"
       try {
         $fileBytes = [IO.File]::ReadAllBytes($filePath)
         $boundary = [Guid]::NewGuid().ToString()
         $LF = "`r`n"
-        $bodyLines = @(
-          "--$boundary",
-          "Content-Disposition: form-data; name=`"access_token`"$LF",
-          $giteeToken,
+        $bodyHeader = @(
           "--$boundary",
           "Content-Disposition: form-data; name=`"file`"; filename=`"$fileName`"",
           "Content-Type: application/octet-stream$LF"
         ) -join $LF
         $bodyEnd = "$LF--$boundary--$LF"
         $encoding = [Text.Encoding]::UTF8
-        $bodyPreamble = $encoding.GetBytes($bodyLines)
+        $bodyPreamble = $encoding.GetBytes($bodyHeader)
         $bodyEpilogue = $encoding.GetBytes($bodyEnd)
         $fullBody = New-Object byte[] ($bodyPreamble.Length + $fileBytes.Length + $bodyEpilogue.Length)
         [Buffer]::BlockCopy($bodyPreamble, 0, $fullBody, 0, $bodyPreamble.Length)
