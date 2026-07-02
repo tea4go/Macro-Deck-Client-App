@@ -245,36 +245,31 @@ if ($Publish) {
     Write-Ok "Gitee Release 已创建（ID: $releaseId）"
 
     # 2) 上传 APK 和 AAB
-    #    Gitee API 上传附件时，access_token 需放在 URL 查询参数中（form body 里会 401）
+    #    Gitee API 上传附件用 curl 最可靠（PowerShell 手动拼 multipart 容易格式错误）
+    #    Windows 上 PowerShell 的 curl 是 Invoke-WebRequest 别名，需明确调用 curl.exe
+    $curlExe = Get-CommandPath 'curl.exe'
+    if (-not $curlExe) { $curlExe = Get-CommandPath 'curl' }
+    if (-not $curlExe) {
+      Write-Fail '未找到 curl 命令，无法上传文件'
+      exit 1
+    }
     foreach ($filePath in @($apkPath, $aabPath)) {
       $fileName = [IO.Path]::GetFileName($filePath)
       Write-Host "  正在上传 $fileName ..." -ForegroundColor Cyan
-      $uploadUri = "https://gitee.com/api/v5/repos/$giteeOwner/$giteeRepo/releases/$releaseId/attach_files?access_token=$giteeToken"
-      try {
-        $fileBytes = [IO.File]::ReadAllBytes($filePath)
-        $boundary = [Guid]::NewGuid().ToString()
-        $LF = "`r`n"
-        $bodyHeader = @(
-          "--$boundary",
-          "Content-Disposition: form-data; name=`"file`"; filename=`"$fileName`"",
-          "Content-Type: application/octet-stream$LF"
-        ) -join $LF
-        $bodyEnd = "$LF--$boundary--$LF"
-        $encoding = [Text.Encoding]::UTF8
-        $bodyPreamble = $encoding.GetBytes($bodyHeader)
-        $bodyEpilogue = $encoding.GetBytes($bodyEnd)
-        $fullBody = New-Object byte[] ($bodyPreamble.Length + $fileBytes.Length + $bodyEpilogue.Length)
-        [Buffer]::BlockCopy($bodyPreamble, 0, $fullBody, 0, $bodyPreamble.Length)
-        [Buffer]::BlockCopy($fileBytes, 0, $fullBody, $bodyPreamble.Length, $fileBytes.Length)
-        [Buffer]::BlockCopy($bodyEpilogue, 0, $fullBody, $bodyPreamble.Length + $fileBytes.Length, $bodyEpilogue.Length)
-        $null = Invoke-RestMethod -Method Post -Uri $uploadUri `
-          -ContentType "multipart/form-data; boundary=$boundary" `
-          -Body $fullBody -ErrorAction Stop
-        Write-Ok "$fileName 上传成功"
-      } catch {
-        Write-Fail "$fileName 上传失败：$($_.Exception.Message)"
+      $uploadUri = "https://gitee.com/api/v5/repos/$giteeOwner/$giteeRepo/releases/$releaseId/attach_files"
+      $curlArgs = @(
+        '-s', '-S',
+        '-X', 'POST',
+        '-F', "file=@$filePath",
+        '-F', "access_token=$giteeToken",
+        $uploadUri
+      )
+      Invoke-NativeStream -Block { & $curlExe @curlArgs }
+      if ($LASTEXITCODE -ne 0) {
+        Write-Fail "$fileName 上传失败（curl 退出码: $LASTEXITCODE）"
         exit 1
       }
+      Write-Ok "$fileName 上传成功"
     }
     Write-Ok "已发布到 Gitee Release：https://gitee.com/$giteeOwner/$giteeRepo/releases/tag/$tag"
 
