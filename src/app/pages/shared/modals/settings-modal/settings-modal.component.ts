@@ -71,9 +71,12 @@ export class SettingsModalComponent  implements OnInit {
 
   /**
    * 手动检查更新：有新版本弹更新弹窗，已是最新则提示。
-   * 仅 Android 有效。
+   * 仅 Android 有效。检查前先保存当前更新源设置，确保使用用户刚选择的源。
    */
   async checkForUpdate() {
+    // 先保存更新源，避免用户改了源但还没点「保存」就点检查更新
+    await this.settingsService.setUpdateSource(this.updateSource as 'github' | 'gitee');
+
     const info = await this.updateService.checkForUpdate(false);
     if (info.hasUpdate) {
       const modal = await this.modalController.create({
