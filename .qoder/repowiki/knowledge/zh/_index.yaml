@@ -3,7 +3,7 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-02T02:16:28Z"
+exported_at: "2026-07-02T08:51:04Z"
 modules:
     "":
         dir_name: Macro Deck 跨平台客户端编排中心
@@ -484,8 +484,8 @@ modules:
         depends_on: []
         related_to: []
     scripts:
-        dir_name: 跨平台构建与环境自动化
-        title: 跨平台构建与环境自动化
+        dir_name: 跨平台构建与环境自动化脚本
+        title: 跨平台构建与环境自动化脚本
         scope:
             - scripts/
         source_files: []

@@ -20,11 +20,12 @@ export class DiagnosticService {
   async getVersion() {
     if (this.isiOSorAndroid()) {
       const info = await App.getInfo();
-      return `v. ${this.versionPrefix()}-${info.version}`;
+      // 拼接 versionName.versionCode，如 "3.0.1.7"
+      return `v. ${this.versionPrefix()}-${info.version}.${info.build}`;
     }
 
     // Web 平台：显示与 Android build.gradle 同步的版本（由 Sync-AppVersion 写入 environment）
-    return `v${environment.version} (${environment.versionCode})`;
+    return `v${environment.version}.${environment.versionCode}`;
   }
 
   /**
