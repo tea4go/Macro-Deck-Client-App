@@ -8,7 +8,61 @@
 #       if ($Yes) { Enable-AutoConfirm }
 #   - 如需追踪整体失败状态，调用脚本应在顶部声明 $Failed = $false
 
-$script:RootDir = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
+<#
+.SYNOPSIS
+  将路径中的 NTFS junction（挂载点）解析为真实物理路径。
+.DESCRIPTION
+  当项目目录通过 junction 访问时（如 C:\MyWork → D:\MyWork），
+  PowerShell 的 Resolve-Path 仍返回 junction 路径，而 Node.js/webpack
+  会解析到真实路径，导致 TypeScript 编译路径不匹配。
+  此函数沿路径逐级检查 junction 并替换为 Substitute Name。
+  不依赖 fsutil，仅需标准 .NET API，无需管理员权限。
+  若路径不含 junction，原样返回。
+#>
+function Resolve-JunctionPath {
+  param([Parameter(Mandatory)][string]$Path)
+
+  # 规范化：去掉尾部反斜杠（根目录除外）
+  $normalized = $Path.TrimEnd('\')
+  if ($normalized.Length -eq 2 -and $normalized[1] -eq ':') {
+    return $Path  # 根目录（如 C:\）直接返回
+  }
+
+  # 逐级向上查找 junction，记录最深一级的 junction 替换
+  $current = $normalized
+  $junctionRoot = $null
+  $junctionSubstitute = $null
+
+  while ($current -and $current.Length -gt 3) {
+    try {
+      $item = Get-Item -LiteralPath $current -Force -ErrorAction SilentlyContinue
+      if ($item -and ($item.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+        $target = $item.Target
+        if ($target) {
+          # Target 格式如 "D:\MyWork" 或 "\??\D:\MyWork"
+          $clean = $target -replace '^\\?\?\\', ''
+          $junctionRoot = $current
+          $junctionSubstitute = $clean
+        }
+      }
+    } catch { }
+    $current = Split-Path $current -Parent
+  }
+
+  if ($junctionRoot -and $junctionSubstitute) {
+    $relative = $normalized.Substring($junctionRoot.Length).TrimStart('\')
+    if ($relative) {
+      return Join-Path $junctionSubstitute $relative
+    }
+    return $junctionSubstitute
+  }
+
+  return $Path
+}
+
+$script:RootDir = Resolve-JunctionPath (
+  (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..\..')).Path
+)
 
 # ─── Logging ─────────────────────────────────────────────────────────────────
 <#
