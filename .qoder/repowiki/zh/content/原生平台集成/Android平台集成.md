@@ -24,14 +24,18 @@
 - [capacitor.plugins.json](file://android/app/src/main/assets/capacitor.plugins.json)
 - [Fastfile](file://android/fastlane/Fastfile)
 - [sync_version_bywin.ps1](file://scripts/windows/sync_version_bywin.ps1)
+- [environment.ts](file://src/environments/environment.ts)
+- [environment.prod.ts](file://src/environments/environment.prod.ts)
+- [environment.web.ts](file://src/environments/environment.web.ts)
+- [environment.web.prod.ts](file://src/environments/environment.web.prod.ts)
 </cite>
 
 ## 更新摘要
 **所做更改**
-- 更新版本号管理：versionCode从9升级到18，代表第三次主要发布（版本3.0.1）
-- 强化版本同步机制：完善跨平台版本一致性管理流程
-- 更新构建配置：确保与最新的Capacitor和Android SDK兼容性
-- 优化发布流程：改进Fastlane自动化构建和版本管理
+- **更新** 版本号管理：versionCode从17升级到18，保持versionName为3.0.1不变
+- **更新** 跨平台版本同步：确保Android、iOS和Web平台的版本一致性
+- **更新** 构建配置验证：确认所有环境配置文件中的版本信息已同步更新
+- **更新** Fastlane自动化：验证CI/CD流水线中的版本递增机制正常工作
 
 ## 目录
 1. [简介](#简介)
@@ -54,7 +58,7 @@
 - 权限声明、应用配置与Intent过滤器设置
 - 构建配置（build.gradle）、混淆规则（ProGuard）与资源文件配置
 - Android特有能力：系统UI可见性控制、文件路径配置等
-- **更新**：版本管理升级，versionCode从9升级到18，支持第三次主要发布（3.0.1版本）
+- **更新**：版本管理升级，versionCode从17升级到18，支持3.0.1版本的持续发布
 - **更新**：增强的版本同步机制，确保跨平台版本一致性
 - **新增**：应用程序更新功能，包括应用内更新机制、权限配置和插件集成
 - **新增**：Capacitor插件生态系统，涵盖@capacitor-community/file-opener和@capacitor/filesystem插件
@@ -721,7 +725,7 @@ SV["sync_version_bywin.ps1"] --> BG
 - [Fastfile:5-23](file://android/fastlane/Fastfile#L5-L23)
 
 ## 结论
-本Android集成方案以Capacitor为核心，结合系统UI可见性控制与WebView容器，实现了稳定的沉浸式体验与跨平台能力。通过将minSdkVersion从22升级到23，应用获得了更好的平台兼容性和安全性保障。**更新**的版本管理系统将versionCode从9升级到18，versionName升级到3.0.1，代表了项目的重大里程碑。**新增**的应用程序更新功能通过@capacitor-community/file-opener和@capacitor/filesystem插件，提供了完整的应用内更新解决方案。最新的SDK升级（compileSdkVersion和targetSdkVersion到35）确保了对现代Android特性的支持和最佳性能表现。**新增**的Fastlane自动化和版本同步机制确保了跨平台版本的一致性和构建效率。通过集中化的版本管理与清晰的资源/清单配置，提升了可维护性与一致性。建议在后续迭代中逐步引入混淆与性能监控，同时完善权限最小化与安全策略，以满足更严格的生产要求。
+本Android集成方案以Capacitor为核心，结合系统UI可见性控制与WebView容器，实现了稳定的沉浸式体验与跨平台能力。通过将minSdkVersion从22升级到23，应用获得了更好的平台兼容性和安全性保障。**更新**的版本管理系统将versionCode从17升级到18，versionName保持在3.0.1，代表了项目的持续演进和稳定性提升。**新增**的应用程序更新功能通过@capacitor-community/file-opener和@capacitor/filesystem插件，提供了完整的应用内更新解决方案。最新的SDK升级（compileSdkVersion和targetSdkVersion到35）确保了对现代Android特性的支持和最佳性能表现。**新增**的Fastlane自动化和版本同步机制确保了跨平台版本的一致性和构建效率。通过集中化的版本管理与清晰的资源/清单配置，提升了可维护性与一致性。建议在后续迭代中逐步引入混淆与性能监控，同时完善权限最小化与安全策略，以满足更严格的生产要求。
 
 ## 附录
 - 构建、调试与发布流程（建议步骤）：
