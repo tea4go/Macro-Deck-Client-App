@@ -59,13 +59,13 @@
     <ng-template [ngTemplateOutlet]="generalConnectionInfo"/>
 
     <ion-item class="mt-2">
-      <ion-input labelPlacement="fixed" type="text" [(ngModel)]="host" [clearInput]="true">
+      <ion-input labelPlacement="floating" type="text" [(ngModel)]="host" [clearInput]="true">
         <div slot="label">{{ 'addConnection.ipAddressHostname' | translate }}</div>
       </ion-input>
     </ion-item>
 
     <ion-item>
-      <ion-input labelPlacement="fixed" type="number" [(ngModel)]="port">
+      <ion-input labelPlacement="floating" type="number" [(ngModel)]="port">
         <div slot="label">{{ 'addConnection.port' | translate }}</div>
       </ion-input>
     </ion-item>
@@ -78,7 +78,7 @@
 
 <ng-template #generalConnectionInfo>
   <ion-item>
-    <ion-input labelPlacement="fixed" type="text" [placeholder]="host" [(ngModel)]="name" [clearInput]="true">
+    <ion-input labelPlacement="floating" type="text" [placeholder]="host" [(ngModel)]="name" [clearInput]="true">
       <div slot="label">{{ 'addConnection.name' | translate }}</div>
     </ion-input>
   </ion-item>
