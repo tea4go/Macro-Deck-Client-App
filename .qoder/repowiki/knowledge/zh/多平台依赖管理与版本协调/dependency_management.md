@@ -1,0 +1,25 @@
+Macro Deck 客户端采用基于 **Capacitor** 的混合架构，其依赖管理策略横跨 Web (npm)、Android (Gradle) 和 iOS (CocoaPods) 三个生态系统，并通过统一的 `package.json` 进行核心版本协调。
+
+### 1. 核心依赖系统：npm & Capacitor
+- **统一入口**：根目录的 `package.json` 是项目依赖的核心。它声明了 Angular、Ionic 以及所有 `@capacitor/*` 插件的版本。
+- **版本对齐**：Capacitor 核心库（`@capacitor/core`, `@capacitor/cli`, `@capacitor/android`, `@capacitor/ios`）严格保持版本一致（当前为 `7.2.0`），以确保跨平台桥接层的稳定性。
+- **本地插件开发**：项目包含一个本地开发的 Capacitor 插件 `sslhandler`，通过 `package.json` 中的 `"sslhandler": "./capacitor_plugins/sslhandler/"` 以相对路径方式引入。这种方式允许在修改原生代码后直接同步到原生工程中，而无需发布到 npm 仓库。
+
+### 2. Android 依赖管理 (Gradle)
+- **配置集中化**：Android 平台的依赖版本并非硬编码在各个模块中，而是通过 `android/variables.gradle` 进行集中定义。该文件声明了 `minSdkVersion`、`compileSdkVersion` 以及各类 AndroidX 库的版本号。
+- **构建脚本集成**：根目录的 `android/build.gradle` 通过 `apply from: "variables.gradle"` 引用这些变量，确保所有子模块使用统一的 SDK 和库版本。
+- **仓库源**：配置了 `google()` 和 `mavenCentral()` 作为主要的依赖下载源。
+
+### 3. iOS 依赖管理 (CocoaPods)
+- **动态 Podfile**：`ios/App/Podfile` 并不直接硬编码所有依赖的远程版本，而是通过 `:path` 指向 `node_modules` 中对应的 Capacitor 插件包。例如：`pod 'CapacitorApp', :path => '../../node_modules/@capacitor/app'`。
+- **同步机制**：这种设计使得 iOS 的原生依赖完全由 npm 的版本控制驱动。当开发者在 `package.json` 中更新插件版本并执行 `npm install` 后，只需运行 `npx cap sync` 即可更新 `Podfile.lock` 和 Xcode 工程。
+- **本地插件支持**：自定义的 `sslhandler` 插件同样通过 `:path => '../../node_modules/sslhandler'` 的方式集成到 Pod 体系中。
+
+### 4. 自动化与工具链依赖 (Ruby/Gem)
+- **Fastlane 集成**：项目根目录及 `android/`、`ios/` 目录下均包含 `Gemfile`，用于管理 Ruby 依赖，主要是 `fastlane`。
+- **作用**：Fastlane 负责处理复杂的原生应用签名、打包以及向 TestFlight 或 Google Play 提交发布的流程，将原生平台的部署依赖也纳入了版本控制体系。
+
+### 5. 开发者规范
+- **同步流程**：任何涉及 `package.json` 中 Capacitor 插件版本的变更，都必须随后执行 `npx cap sync`，以确保 Android 的 Gradle 配置和 iOS 的 Podfile 得到正确更新。
+- **本地插件维护**：修改 `capacitor_plugins/sslhandler` 下的原生代码后，需重新构建该插件（如执行 `npm run build`）并再次同步到主项目中。
+- **版本一致性**：严禁手动修改 `ios/App/Podfile.lock` 或 `android/app/build.gradle` 中的插件版本号，所有变更应始于 `package.json`。

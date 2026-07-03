@@ -1,0 +1,15 @@
+schema_version: 1
+module_path: frontend_style
+title: Ionic/Capacitor 前端样式与主题系统
+scope: []
+source_files:
+    - src/theme/variables.scss
+    - src/global.scss
+    - src/app/services/theme/theme.service.ts
+    - src/app/enums/appearance-type.ts
+    - src/app/widget-content-components/button-widget/button-widget.component.scss
+    - src/app/pages/deck/widget-grid/widget-grid.component.scss
+    - ionic.config.json
+    - package.json
+depends_on: []
+related_to: []

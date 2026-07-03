@@ -1,0 +1,12 @@
+schema_version: 1
+module_path: logging_system
+title: 日志系统 — 基于原生控制台的非结构化调试输出
+scope: []
+source_files:
+    - src/app/services/connection/connection.service.ts
+    - src/app/services/websocket/websocket.service.ts
+    - src/app/services/loading/loading.service.ts
+    - src/main.ts
+    - src/app/services/screen-orientation/screen-orientation.service.ts
+depends_on: []
+related_to: []

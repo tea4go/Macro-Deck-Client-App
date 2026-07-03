@@ -1,0 +1,8 @@
+schema_version: 1
+module_path: app
+title: Macro Deck 跨平台控制器应用
+scope:
+    - src/
+source_files: []
+depends_on: []
+related_to: []

@@ -1,0 +1,13 @@
+schema_version: 1
+module_path: dependency_management
+title: 多平台依赖管理与版本协调
+scope: []
+source_files:
+    - package.json
+    - android/build.gradle
+    - android/variables.gradle
+    - ios/App/Podfile
+    - Gemfile
+    - capacitor_plugins/sslhandler/package.json
+depends_on: []
+related_to: []
