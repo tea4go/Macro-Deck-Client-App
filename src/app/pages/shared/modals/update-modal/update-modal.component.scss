@@ -5,6 +5,11 @@
   margin-bottom: 4px;
 }
 
+// 覆盖 Bootstrap 的 text-muted（带 !important），在深色主题下保证可读性
+.text-muted {
+  color: var(--ion-color-medium, #dee2e9) !important;
+}
+
 .release-notes {
   white-space: pre-wrap;
   word-break: break-word;

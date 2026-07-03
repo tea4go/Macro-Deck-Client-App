@@ -3,11 +3,11 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-03T09:36:04Z"
+exported_at: "2026-07-03T10:07:50Z"
 modules:
     "":
-        dir_name: Macro Deck 客户端（Angular_Ionic + Capacitor 三端应用）
-        title: Macro Deck 客户端（Angular/Ionic + Capacitor 三端应用）
+        dir_name: Macro Deck 宏键盘跨平台客户端（Angular + Capacitor）
+        title: Macro Deck 宏键盘跨平台客户端（Angular + Capacitor）
         scope:
             - README.md
             - package.json
@@ -351,8 +351,8 @@ modules:
         depends_on: []
         related_to: []
     android:
-        dir_name: Android 原生壳工程与发布流水线
-        title: Android 原生壳工程与发布流水线
+        dir_name: Android 壳应用与发布流水线
+        title: Android 壳应用与发布流水线
         scope:
             - android/
         source_files: []
@@ -361,8 +361,8 @@ modules:
         related_to:
             - path: scripts
     app:
-        dir_name: Macro Deck 客户端应用（Angular_Ionic）
-        title: Macro Deck 客户端应用（Angular/Ionic）
+        dir_name: Macro Deck 宏键盘控制器应用
+        title: Macro Deck 宏键盘控制器应用
         scope:
             - src/
         source_files: []
