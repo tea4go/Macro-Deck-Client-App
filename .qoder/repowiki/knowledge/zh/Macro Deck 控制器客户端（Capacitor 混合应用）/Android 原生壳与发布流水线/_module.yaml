@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: android
-title: Android 客户端壳工程与自动化发布
+title: Android 原生壳与发布流水线
 scope:
     - android/
 source_files: []
