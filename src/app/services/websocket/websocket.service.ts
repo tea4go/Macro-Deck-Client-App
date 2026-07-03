@@ -166,7 +166,7 @@ export class WebsocketService {
       await this.settingsService.setLastConnection(this.connection?.id ?? "");
       this.protocolHandlerService.setWebsocketSubject(this.socket!);
       this.isConnected = true;
-      await this.loadingService.showLoading("Waiting for the host to accept the connection...");
+      await this.loadingService.showLoading(this.translate.instant('connection.waitingForAccept'));
       // 发送连接确认消息，包含客户端 ID 和认证令牌
       let clientId = await this.settingsService.getClientId();
       this.socket?.next(Protocol2Messages.getConnectedMessage(clientId, this.connection?.token));

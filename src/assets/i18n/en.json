@@ -128,7 +128,8 @@
   "connection": {
     "connectingTo": "Connecting to {{name}}...",
     "connectingToMacroDeck": "Connecting to Macro Deck...",
-    "connectingViaUsb": "Connecting via USB..."
+    "connectingViaUsb": "Connecting via USB...",
+    "waitingForAccept": "Waiting for the host to accept the connection..."
   },
   "update": {
     "checkForUpdate": "Check for updates",

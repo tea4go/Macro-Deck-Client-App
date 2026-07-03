@@ -128,7 +128,8 @@
   "connection": {
     "connectingTo": "正在连接到 {{name}}...",
     "connectingToMacroDeck": "正在连接到 Macro Deck...",
-    "connectingViaUsb": "正在通过 USB 连接..."
+    "connectingViaUsb": "正在通过 USB 连接...",
+    "waitingForAccept": "等待主机接受连接..."
   },
   "update": {
     "checkForUpdate": "检查更新",
