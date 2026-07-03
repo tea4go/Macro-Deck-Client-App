@@ -3,11 +3,11 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-03T10:07:50Z"
+exported_at: "2026-07-03T10:36:39Z"
 modules:
     "":
-        dir_name: Macro Deck 宏键盘跨平台客户端（Angular + Capacitor）
-        title: Macro Deck 宏键盘跨平台客户端（Angular + Capacitor）
+        dir_name: Macro Deck 宏键盘客户端（Angular_Ionic + Capacitor 三端应用）
+        title: Macro Deck 宏键盘客户端（Angular/Ionic + Capacitor 三端应用）
         scope:
             - README.md
             - package.json

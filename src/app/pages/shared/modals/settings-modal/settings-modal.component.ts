@@ -57,6 +57,10 @@ export class SettingsModalComponent  implements OnInit {
   language: string = "0";
   /** 更新检查源（'github' 或 'gitee'） */
   updateSource: string = "gitee";
+  /** 选择框确认按钮文本 */
+  okText: string = "OK";
+  /** 选择框取消按钮文本 */
+  cancelText: string = "Cancel";
 
   constructor(private modalController: ModalController,
               private settingsService: SettingsService,
@@ -101,6 +105,9 @@ export class SettingsModalComponent  implements OnInit {
   async ngOnInit() {
     await this.loadCurrentSettings();
     this.isAndroidOreo = await this.diagnosticService.isAndroidOreo();
+    // 选择框弹窗的 OK/Cancel 按钮文本需要同步翻译，避免使用 Ionic 默认英文
+    this.okText = this.translate.instant('common.ok');
+    this.cancelText = this.translate.instant('common.cancel');
   }
 
   /** 确认保存设置并关闭弹窗 */
