@@ -50,7 +50,7 @@
       <ion-item>
         <ion-icon slot="start" class="mdi mdi-screen-rotation d-flex align-items-center"></ion-icon>
         @if (!isAndroidOreo) {
-          <ion-select [(ngModel)]="screenOrientation" [label]="'settings.screenOrientation' | translate">
+          <ion-select [(ngModel)]="screenOrientation" [label]="'settings.screenOrientation' | translate" [okText]="'common.ok' | translate" [cancelText]="'common.cancel' | translate">
             <ion-select-option value="0">{{ 'settings.orientationAuto' | translate }}</ion-select-option>
             <ion-select-option value="1">{{ 'settings.orientationLandscape' | translate }}</ion-select-option>
             <ion-select-option value="2">{{ 'settings.orientationLandscapeAlt' | translate }}</ion-select-option>
@@ -69,7 +69,7 @@
 
     <ion-item>
       <ion-icon slot="start" class="mdi mdi-translate d-flex align-items-center"></ion-icon>
-      <ion-select [(ngModel)]="language" [label]="'settings.language' | translate">
+      <ion-select [(ngModel)]="language" [label]="'settings.language' | translate" [okText]="'common.ok' | translate" [cancelText]="'common.cancel' | translate">
         <ion-select-option value="0">{{ 'settings.languageSystem' | translate }}</ion-select-option>
         <ion-select-option value="1">{{ 'settings.languageEnglish' | translate }}</ion-select-option>
         <ion-select-option value="2">{{ 'settings.languageChinese' | translate }}</ion-select-option>
@@ -79,7 +79,7 @@
     @if (isAndroid()) {
       <ion-item>
         <ion-icon slot="start" class="mdi mdi-server-network d-flex align-items-center"></ion-icon>
-        <ion-select [(ngModel)]="updateSource" [label]="'settings.updateSource' | translate">
+        <ion-select [(ngModel)]="updateSource" [label]="'settings.updateSource' | translate" [okText]="'common.ok' | translate" [cancelText]="'common.cancel' | translate">
           <ion-select-option value="gitee">Gitee</ion-select-option>
           <ion-select-option value="github">GitHub</ion-select-option>
         </ion-select>
@@ -101,7 +101,7 @@
 
     <ion-item>
       <ion-icon slot="start" class="mdi mdi-theme-light-dark d-flex align-items-center"></ion-icon>
-      <ion-select [(ngModel)]="appearanceType" [label]="'settings.appearance' | translate">
+      <ion-select [(ngModel)]="appearanceType" [label]="'settings.appearance' | translate" [okText]="'common.ok' | translate" [cancelText]="'common.cancel' | translate">
         <ion-select-option value="0">{{ 'settings.appearanceSystem' | translate }}</ion-select-option>
         <ion-select-option value="1">{{ 'settings.appearanceDark' | translate }}</ion-select-option>
         <ion-select-option value="2">{{ 'settings.appearanceLight' | translate }}</ion-select-option>
@@ -110,7 +110,7 @@
 
     <ion-item>
       <ion-icon slot="start" class="mdi mdi-border-all-variant d-flex align-items-center"></ion-icon>
-      <ion-select [(ngModel)]="buttonWidgetBorderStyle" [label]="'settings.buttonWidgetBorder' | translate">
+      <ion-select [(ngModel)]="buttonWidgetBorderStyle" [label]="'settings.buttonWidgetBorder' | translate" [okText]="'common.ok' | translate" [cancelText]="'common.cancel' | translate">
         <ion-select-option value="0">{{ 'settings.borderNone' | translate }}</ion-select-option>
         <ion-select-option value="1">{{ 'settings.borderColored' | translate }}</ion-select-option>
       </ion-select>
