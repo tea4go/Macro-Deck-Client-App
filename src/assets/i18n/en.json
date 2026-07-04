@@ -48,7 +48,14 @@
   "menu": {
     "openFullScreen": "Open full screen",
     "settings": "Settings",
+    "sendText": "Send text",
     "closeConnection": "Close connection"
+  },
+  "sendText": {
+    "title": "Send text",
+    "placeholder": "Enter text to send...",
+    "sendKeyboard": "Keyboard input",
+    "sendClipboard": "Paste (clipboard)"
   },
   "home": {
     "settings": "Settings",

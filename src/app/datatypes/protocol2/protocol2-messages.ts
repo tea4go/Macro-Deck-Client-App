@@ -31,4 +31,18 @@ export class Protocol2Messages {
       "Method": "GET_BUTTONS"
     }
   }
+
+  public static getSendTextMessage(text: string) {
+    return {
+      "Method": "SEND_TEXT",
+      "Message": text
+    }
+  }
+
+  public static getSendTextClipboardMessage(text: string) {
+    return {
+      "Method": "SEND_TEXT_CLIPBOARD",
+      "Message": text
+    }
+  }
 }

@@ -17,6 +17,10 @@
           <ion-icon slot="start" name="settings" size="large"></ion-icon>
           <ion-label>{{ 'menu.settings' | translate }}</ion-label>
         </ion-item>
+        <ion-item [button]="true" (click)="openTextInput()">
+          <ion-icon slot="start" name="create-outline" size="large"></ion-icon>
+          <ion-label>{{ 'menu.sendText' | translate }}</ion-label>
+        </ion-item>
         @if (!environment.webVersion) {
           <ion-item [button]="true" (click)="close()">
             <ion-icon color="danger" slot="start" name="close" size="large"></ion-icon>

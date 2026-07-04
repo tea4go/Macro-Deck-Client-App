@@ -48,7 +48,14 @@
   "menu": {
     "openFullScreen": "全屏打开",
     "settings": "设置",
+    "sendText": "发送文本",
     "closeConnection": "关闭连接"
+  },
+  "sendText": {
+    "title": "发送文本",
+    "placeholder": "输入要发送的文本...",
+    "sendKeyboard": "键盘输入",
+    "sendClipboard": "粘贴板粘贴"
   },
   "home": {
     "settings": "设置",
