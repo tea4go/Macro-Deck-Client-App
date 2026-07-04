@@ -1,3 +1,18 @@
+---
+kind: error_handling
+name: 基于事件驱动的连接错误处理与UI反馈机制
+category: error_handling
+scope:
+    - '**'
+source_files:
+    - src/app/services/websocket/websocket.service.ts
+    - src/app/pages/home/home.page.ts
+    - src/app/pages/connection-lost/connection-lost.page.ts
+    - src/app/pages/home/modals/connection-failed/connection-failed.component.ts
+    - src/app/pages/home/modals/insecure-connection/insecure-connection.component.ts
+    - src/app/pages/home/modals/add-connection/add-connection.component.ts
+---
+
 该仓库采用**事件驱动（EventEmitter）**和**状态导航**相结合的方式处理错误，主要集中在网络连接、安全认证和用户输入验证场景。没有全局统一的错误拦截中间件或复杂的错误类型层级，而是通过服务层抛出事件，由页面组件订阅并触发相应的 UI 反馈（模态框、页面跳转或倒计时重试）。
 
 ### 1. 核心架构与模式

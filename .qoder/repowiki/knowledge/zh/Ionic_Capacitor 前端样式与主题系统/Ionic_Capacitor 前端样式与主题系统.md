@@ -1,3 +1,20 @@
+---
+kind: frontend_style
+name: Ionic/Capacitor 前端样式与主题系统
+category: frontend_style
+scope:
+    - '**'
+source_files:
+    - src/theme/variables.scss
+    - src/global.scss
+    - src/app/services/theme/theme.service.ts
+    - src/app/enums/appearance-type.ts
+    - src/app/widget-content-components/button-widget/button-widget.component.scss
+    - src/app/pages/deck/widget-grid/widget-grid.component.scss
+    - ionic.config.json
+    - package.json
+---
+
 ## 1. 技术栈与核心方法
 - **框架基础**: 基于 **Ionic Framework (v8)** 和 **Angular (v19)** 构建，使用 **Capacitor** 作为原生桥接层。
 - **样式语言**: 采用 **SCSS** 进行样式开发，遵循 Ionic 的组件化样式结构（每个 Page/Component 拥有独立的 `.scss` 文件）。

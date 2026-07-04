@@ -1,3 +1,20 @@
+---
+kind: build_system
+name: 基于 GitHub Actions 与 Fastlane 的跨平台自动化构建与分发系统
+category: build_system
+scope:
+    - '**'
+source_files:
+    - .github/workflows/ci.yml
+    - .github/workflows/reusable-base-build.yml
+    - .github/workflows/reusable-android-build.yml
+    - .github/workflows/reusable-ios-build.yml
+    - android/fastlane/Fastfile
+    - ios/App/fastlane/Fastfile
+    - Dockerfile
+    - package.json
+---
+
 ## 1. 核心构建体系
 该项目采用 **Ionic/Angular** 作为 Web 核心，通过 **Capacitor** 桥接至原生平台（Android/iOS）。构建流程高度依赖 **GitHub Actions** 进行 CI/CD 编排，并利用 **Fastlane** 处理各平台的签名、打包及发布任务。
 

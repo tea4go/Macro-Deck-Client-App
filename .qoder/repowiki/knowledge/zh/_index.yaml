@@ -3,11 +3,11 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-03T11:08:34Z"
+exported_at: "2026-07-04T17:02:07Z"
 modules:
     "":
-        dir_name: Macro Deck 跨平台客户端（Angular_Ionic + Capacitor）
-        title: Macro Deck 跨平台客户端（Angular/Ionic + Capacitor）
+        dir_name: Macro Deck 客户端（Angular_Ionic + Capacitor 三端应用）
+        title: Macro Deck 客户端（Angular/Ionic + Capacitor 三端应用）
         scope:
             - README.md
             - package.json
@@ -361,8 +361,8 @@ modules:
         related_to:
             - path: scripts
     app:
-        dir_name: Macro Deck 跨平台控制器应用
-        title: Macro Deck 跨平台控制器应用
+        dir_name: Macro Deck 控制器应用 (src_)
+        title: Macro Deck 控制器应用 (src/)
         scope:
             - src/
         source_files: []
@@ -382,84 +382,6 @@ modules:
         children: []
         depends_on: []
         related_to: []
-    build_system:
-        dir_name: 基于 GitHub Actions 与 Fastlane 的跨平台自动化构建与分发系统
-        title: 基于 GitHub Actions 与 Fastlane 的跨平台自动化构建与分发系统
-        scope: []
-        source_files:
-            - .github/workflows/ci.yml
-            - .github/workflows/reusable-base-build.yml
-            - .github/workflows/reusable-android-build.yml
-            - .github/workflows/reusable-ios-build.yml
-            - android/fastlane/Fastfile
-            - ios/App/fastlane/Fastfile
-            - Dockerfile
-            - package.json
-        children: []
-        depends_on: []
-        related_to: []
-    configuration_system:
-        dir_name: Macro Deck 客户端配置系统
-        title: Macro Deck 客户端配置系统
-        scope: []
-        source_files:
-            - src/environments/environment.ts
-            - src/environments/environment.prod.ts
-            - src/environments/environment.web.ts
-            - src/environments/environment.web.prod.ts
-            - capacitor.config.ts
-            - angular.json
-            - src/app/services/settings/settings.service.ts
-            - android/variables.gradle
-            - android/app/build.gradle
-            - ionic.config.json
-        children: []
-        depends_on: []
-        related_to: []
-    dependency_management:
-        dir_name: 多平台依赖管理与版本协调
-        title: 多平台依赖管理与版本协调
-        scope: []
-        source_files:
-            - package.json
-            - android/build.gradle
-            - android/variables.gradle
-            - ios/App/Podfile
-            - Gemfile
-            - capacitor_plugins/sslhandler/package.json
-        children: []
-        depends_on: []
-        related_to: []
-    error_handling:
-        dir_name: 基于事件驱动的连接错误处理与UI反馈机制
-        title: 基于事件驱动的连接错误处理与UI反馈机制
-        scope: []
-        source_files:
-            - src/app/services/websocket/websocket.service.ts
-            - src/app/pages/home/home.page.ts
-            - src/app/pages/connection-lost/connection-lost.page.ts
-            - src/app/pages/home/modals/connection-failed/connection-failed.component.ts
-            - src/app/pages/home/modals/insecure-connection/insecure-connection.component.ts
-            - src/app/pages/home/modals/add-connection/add-connection.component.ts
-        children: []
-        depends_on: []
-        related_to: []
-    frontend_style:
-        dir_name: Ionic_Capacitor 前端样式与主题系统
-        title: Ionic/Capacitor 前端样式与主题系统
-        scope: []
-        source_files:
-            - src/theme/variables.scss
-            - src/global.scss
-            - src/app/services/theme/theme.service.ts
-            - src/app/enums/appearance-type.ts
-            - src/app/widget-content-components/button-widget/button-widget.component.scss
-            - src/app/pages/deck/widget-grid/widget-grid.component.scss
-            - ionic.config.json
-            - package.json
-        children: []
-        depends_on: []
-        related_to: []
     ios:
         dir_name: iOS 客户端应用与自动化发布
         title: iOS 客户端应用与自动化发布
@@ -470,19 +392,6 @@ modules:
         depends_on: []
         related_to:
             - path: scripts
-    logging_system:
-        dir_name: 日志系统 — 基于原生控制台的非结构化调试输出
-        title: 日志系统 — 基于原生控制台的非结构化调试输出
-        scope: []
-        source_files:
-            - src/app/services/connection/connection.service.ts
-            - src/app/services/websocket/websocket.service.ts
-            - src/app/services/loading/loading.service.ts
-            - src/main.ts
-            - src/app/services/screen-orientation/screen-orientation.service.ts
-        children: []
-        depends_on: []
-        related_to: []
     scripts:
         dir_name: 跨平台构建与发布脚本（macOS Bash _ Windows PowerShell）
         title: 跨平台构建与发布脚本（macOS Bash / Windows PowerShell）

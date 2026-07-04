@@ -1,3 +1,22 @@
+---
+kind: configuration_system
+name: Macro Deck 客户端配置系统
+category: configuration_system
+scope:
+    - '**'
+source_files:
+    - src/environments/environment.ts
+    - src/environments/environment.prod.ts
+    - src/environments/environment.web.ts
+    - src/environments/environment.web.prod.ts
+    - capacitor.config.ts
+    - angular.json
+    - src/app/services/settings/settings.service.ts
+    - android/variables.gradle
+    - android/app/build.gradle
+    - ionic.config.json
+---
+
 ## 1. 核心系统与架构
 Macro Deck 客户端采用**分层配置策略**，将运行时环境、原生壳层参数与用户偏好设置分离管理：
 - **构建时环境配置 (Build-time)**：基于 Angular 的 `environment` 文件替换机制，区分 Web/原生及开发/生产环境。
