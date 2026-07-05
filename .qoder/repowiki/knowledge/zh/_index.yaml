@@ -3,11 +3,11 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-04T17:02:07Z"
+exported_at: "2026-07-04T17:31:19Z"
 modules:
     "":
-        dir_name: Macro Deck 客户端（Angular_Ionic + Capacitor 三端应用）
-        title: Macro Deck 客户端（Angular/Ionic + Capacitor 三端应用）
+        dir_name: Macro Deck 控制器应用（单仓三端）
+        title: Macro Deck 控制器应用（单仓三端）
         scope:
             - README.md
             - package.json
