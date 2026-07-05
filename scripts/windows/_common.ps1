@@ -886,21 +886,21 @@ function Assert-Java17 {
   故 Android 构建推荐 JDK 21。仅校验与输出，是否 exit 由调用方决定。
 #>
 function Assert-JavaForAndroid {
-  param([int]$Min = 17, [int]$Max = 21)
+  param([int]$Min = 21, [int]$Max = 21)
   $ver = Get-JavaMajorVersion
-  $hint = "Android 构建需要 JDK $Min-$Max（推荐 21）。请用 jvms 切换：jvms use 21，或从 https://adoptium.net/ 安装 JDK 21。"
+  $hint = "Android 构建需要 JDK 21（Capacitor 插件 toolchain 硬编码要求）。请用 jvms 切换：jvms use 21，或从 https://adoptium.net/ 安装 JDK 21。"
   if ($null -eq $ver) {
-    Write-Fail "未找到 Java，需要 JDK $Min-$Max（推荐 21）"
+    Write-Fail "未找到 Java，需要 JDK 21"
     Write-Fail $hint
     return $false
   }
   if ($ver -lt $Min) {
-    Write-Fail "检测到 Java $ver，版本过低；Android 构建需要 JDK $Min-$Max（推荐 21）"
+    Write-Fail "检测到 Java $ver，版本过低；Capacitor 插件 toolchain 要求 JDK 21"
     Write-Fail $hint
     return $false
   }
   if ($ver -gt $Max) {
-    Write-Fail "检测到 Java $ver，版本过高；Gradle 8.13 仅支持到 JDK $Max（推荐 21）"
+    Write-Fail "检测到 Java $ver，版本过高；Capacitor 插件 toolchain 要求 JDK 21（Gradle 8.13 亦仅支持到 21）"
     Write-Fail $hint
     return $false
   }
