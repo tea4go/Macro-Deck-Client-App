@@ -1,10 +1,28 @@
-.send-text-content::part(scroll) {
-  padding: 8px;
+// 原生 textarea 绝对定位撑满 ion-content 区域
+ion-content {
+  --overflow: hidden;
+  position: relative;
 }
 
-.send-text-area {
+.fill-textarea {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   width: 100%;
-  display: block;
+  height: 100%;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 12px;
+  box-sizing: border-box;
+  background: var(--ion-background-color, #fff);
+  color: var(--ion-text-color, #000);
+  font-size: 16px;
+  font-family: inherit;
+  line-height: 1.5;
+  overflow-y: auto;
 }
 
 .send-buttons {

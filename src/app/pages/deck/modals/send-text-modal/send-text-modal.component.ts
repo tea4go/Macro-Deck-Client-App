@@ -1,12 +1,9 @@
-import {Component, HostListener, OnInit} from '@angular/core';
+import {Component, OnInit} from '@angular/core';
 import {IonicModule, ModalController} from '@ionic/angular';
 import {FormsModule} from '@angular/forms';
 import {TranslatePipe} from '@ngx-translate/core';
 import {WebsocketService} from '../../../../services/websocket/websocket.service';
 import {Protocol2Messages} from '../../../../datatypes/protocol2/protocol2-messages';
-
-const HEADER_H = 56;
-const FOOTER_H = 60;
 
 @Component({
   selector: 'app-send-text-modal',
@@ -17,7 +14,6 @@ const FOOTER_H = 60;
 })
 export class SendTextModalComponent implements OnInit {
   text: string = '';
-  textareaHeight = '200px';
 
   private readonly STORAGE_KEY = 'send_text_last_input';
 
@@ -27,15 +23,8 @@ export class SendTextModalComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    this.recalcHeight();
     const saved = localStorage.getItem(this.STORAGE_KEY);
     if (saved) this.text = saved;
-  }
-
-  @HostListener('window:resize')
-  recalcHeight() {
-    const available = window.innerHeight - HEADER_H - FOOTER_H - 16;
-    this.textareaHeight = `${Math.max(available, 100)}px`;
   }
 
   cancel() {

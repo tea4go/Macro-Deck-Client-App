@@ -12,14 +12,12 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="send-text-content">
-  <ion-textarea
+<ion-content>
+  <textarea
+    class="fill-textarea"
     [(ngModel)]="text"
     [placeholder]="'sendText.placeholder' | translate"
-    [autofocus]="true"
-    [style.height]="textareaHeight"
-    class="send-text-area">
-  </ion-textarea>
+    autofocus></textarea>
 </ion-content>
 
 <ion-footer>
