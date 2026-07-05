@@ -12,23 +12,27 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding">
+<ion-content class="send-text-content">
   <ion-textarea
     [(ngModel)]="text"
     [placeholder]="'sendText.placeholder' | translate"
-    [rows]="6"
     [autofocus]="true"
+    [style.height]="textareaHeight"
     class="send-text-area">
   </ion-textarea>
-
-  <div class="send-buttons">
-    <ion-button expand="block" (click)="sendKeyboard()">
-      <ion-icon slot="start" name="keypad-outline"></ion-icon>
-      {{ 'sendText.sendKeyboard' | translate }}
-    </ion-button>
-    <ion-button expand="block" color="secondary" (click)="sendClipboard()">
-      <ion-icon slot="start" name="paper-plane-outline"></ion-icon>
-      {{ 'sendText.sendClipboard' | translate }}
-    </ion-button>
-  </div>
 </ion-content>
+
+<ion-footer>
+  <ion-toolbar>
+    <div class="send-buttons">
+      <ion-button expand="block" (click)="sendKeyboard()">
+        <ion-icon slot="start" name="keypad-outline"></ion-icon>
+        {{ 'sendText.sendKeyboard' | translate }}
+      </ion-button>
+      <ion-button expand="block" color="secondary" (click)="sendClipboard()">
+        <ion-icon slot="start" name="paper-plane-outline"></ion-icon>
+        {{ 'sendText.sendClipboard' | translate }}
+      </ion-button>
+    </div>
+  </ion-toolbar>
+</ion-footer>

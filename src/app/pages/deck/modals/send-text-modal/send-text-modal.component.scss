@@ -1,11 +1,17 @@
+.send-text-content::part(scroll) {
+  padding: 8px;
+}
+
 .send-text-area {
-  margin-bottom: 16px;
+  width: 100%;
+  display: block;
 }
 
 .send-buttons {
   display: flex;
   flex-direction: row;
   gap: 8px;
+  padding: 4px 8px;
 
   ion-button {
     flex: 1;
