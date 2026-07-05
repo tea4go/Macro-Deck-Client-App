@@ -1,15 +1,16 @@
 <#
 .SYNOPSIS
-  在 Windows 上按需安装/卸载基础工具：winget、Windows Terminal、Microsoft Store、Node.js LTS。
+  在 Windows 上按需安装/卸载基础工具：winget、Windows Terminal、Microsoft Store、Node.js LTS、前端依赖。
 .DESCRIPTION
   主要流程：
   - 支持 -AddTools / -RemoveTools 指定工具列表；支持 all 代表全部
   - 对部分工具提供多种安装来源（GitHub/MS Store/winget），并尽量给出可复现的提示
   - Node.js（提供 npm/npx）是后续 Ionic + Angular Web 构建的前置依赖
+  - deps 通过 npm install --legacy-peer-deps 装齐 node_modules 与 .bin/ng、.bin/ionic
 .PARAMETER Yes
   自动确认（静默模式）。
 .PARAMETER AddTools
-  要安装的工具 Id 列表（winget/terminal/store/node 或 all）。
+  要安装的工具 Id 列表（winget/terminal/store/node/deps 或 all）。
 .PARAMETER RemoveTools
   要卸载的工具 Id 列表（terminal 或 all）。
 #>
@@ -35,7 +36,8 @@ $ToolDefs = @(
   @{ Id = 'winget'; Name = 'winget'; Description = 'Windows 包管理器' },
   @{ Id = 'terminal'; Name = 'Windows 终端'; Description = 'Windows Terminal（多标签终端）' },
   @{ Id = 'store'; Name = 'Microsoft Store'; Description = 'Microsoft Store（应用商店）' },
-  @{ Id = 'node'; Name = 'Node.js LTS'; Description = 'Node.js LTS（npm / npx / Ionic 构建前置）' }
+  @{ Id = 'node'; Name = 'Node.js LTS'; Description = 'Node.js LTS（npm / npx / Ionic 构建前置）' },
+  @{ Id = 'deps'; Name = '前端依赖'; Description = '项目 node_modules（npm install --legacy-peer-deps，含 @angular/cli、@ionic/cli）' }
 )
 
 # ─── winget ───────────────────────────────────────────────────────────────────
@@ -731,6 +733,80 @@ function Install-NodeTool {
   return $false
 }
 
+# ─── 前端依赖 ─────────────────────────────────────────────────────────────────
+
+<#
+.SYNOPSIS
+  检测项目 node_modules 是否就绪。
+.OUTPUTS
+  [bool] node_modules 存在且 .bin/ng.cmd、.bin/ionic.cmd 均已生成返回 true。
+.NOTES
+  只看顶层 node_modules 目录不够——npm 安装被中断或 legacy-peer-deps 冲突时，
+  包目录可能存在但 .bin 未生成，ionic build 会报 "ng is not recognized"。
+#>
+function Test-DepsTool {
+  $nodeModules = Join-Path $script:RootDir 'node_modules'
+  $ngBin       = Join-Path $nodeModules '.bin\ng.cmd'
+  $ionicBin    = Join-Path $nodeModules '.bin\ionic.cmd'
+
+  if (-not (Test-Path -LiteralPath $nodeModules)) {
+    Write-Fail "node_modules 不存在"
+    return $false
+  }
+  if (-not (Test-Path -LiteralPath $ngBin)) {
+    Write-Fail "缺少 node_modules\.bin\ng.cmd（@angular/cli 未正确生成 bin 链接）"
+    return $false
+  }
+  if (-not (Test-Path -LiteralPath $ionicBin)) {
+    Write-Fail "缺少 node_modules\.bin\ionic.cmd（@ionic/cli 未正确生成 bin 链接）"
+    return $false
+  }
+
+  Write-Ok "前端依赖已就绪"
+  Write-Host "    node_modules：$nodeModules"
+  Write-Host "    ng ：$ngBin"
+  Write-Host "    ionic：$ionicBin"
+  return $true
+}
+
+<#
+.SYNOPSIS
+  执行 npm install --legacy-peer-deps 安装前端依赖。
+.NOTES
+  本仓库存在 npm peer dependency 冲突，必须带 --legacy-peer-deps。
+#>
+function Install-DepsTool {
+  Write-Host ""
+  Write-Host "═══ 安装前端依赖（npm install --legacy-peer-deps） ═══" -ForegroundColor Cyan
+  Write-Host ""
+
+  if (Test-DepsTool) { return $true }
+
+  if (-not (Test-NodeTool)) {
+    Write-Fail "Node.js 未就绪，请先安装：-AddTools node"
+    return $false
+  }
+
+  if (-not (Confirm-Install "在 $script:RootDir 执行 npm install --legacy-peer-deps")) { return $false }
+
+  try {
+    Invoke-NativeStreamIn -Path $script:RootDir -Block { & npm install --legacy-peer-deps }
+  }
+  catch {
+    Write-Fail "npm install 失败：$($_.Exception.Message)"
+    return $false
+  }
+  if ($LASTEXITCODE -ne 0) {
+    Write-Fail "npm install --legacy-peer-deps 失败（退出码：$LASTEXITCODE）"
+    return $false
+  }
+
+  if (Test-DepsTool) { return $true }
+  Write-Warn "npm install 已执行，但 .bin/ng.cmd 或 .bin/ionic.cmd 仍缺失"
+  Write-Warn "建议：删除 node_modules 与 package-lock.json 后重试"
+  return $false
+}
+
 # ─── 工具调度 ─────────────────────────────────────────────────────────────────
 
 # Id → Install 函数 的映射
@@ -739,6 +815,7 @@ $ToolInstallers = @{
   'terminal' = ${function:Install-WindowsTerminalTool}
   'store'    = ${function:Install-MicrosoftStoreTool}
   'node'     = ${function:Install-NodeTool}
+  'deps'     = ${function:Install-DepsTool}
 }
 
 # Id → Uninstall 函数 的映射
@@ -759,7 +836,7 @@ function Write-Usage {
   Write-Host "  .\install_base_tools_bywin.ps1 -RemoveTools <工具1,工具2,...>  卸载指定工具"
   Write-Host "  .\install_base_tools_bywin.ps1 -y -AddTools all               静默安装所有工具"
   Write-Host ""
-  Write-Host "可用工具：winget, terminal, store, node" -ForegroundColor Cyan
+  Write-Host "可用工具：winget, terminal, store, node, deps" -ForegroundColor Cyan
   Write-Host ""
   Write-Host "可用工具：" -ForegroundColor Cyan
   foreach ($t in $ToolDefs) {
