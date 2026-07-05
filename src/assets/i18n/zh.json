@@ -55,7 +55,8 @@
     "title": "发送文本",
     "placeholder": "输入要发送的文本...",
     "sendKeyboard": "键盘输入",
-    "sendClipboard": "粘贴板粘贴"
+    "sendClipboard": "粘贴板粘贴",
+    "pasteFromClipboard": "从剪贴板读入"
   },
   "home": {
     "settings": "设置",

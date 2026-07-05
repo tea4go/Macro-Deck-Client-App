@@ -25,5 +25,9 @@
       <ion-icon slot="start" name="clipboard-outline"></ion-icon>
       {{ 'sendText.sendClipboard' | translate }}
     </ion-button>
+    <ion-button expand="block" fill="outline" (click)="pasteFromClipboard()">
+      <ion-icon slot="start" name="clipboard"></ion-icon>
+      {{ 'sendText.pasteFromClipboard' | translate }}
+    </ion-button>
   </div>
 </ion-content>

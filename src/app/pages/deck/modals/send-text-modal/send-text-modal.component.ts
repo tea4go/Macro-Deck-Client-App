@@ -39,6 +39,15 @@ export class SendTextModalComponent implements OnInit {
     this.send('clipboard');
   }
 
+  async pasteFromClipboard() {
+    try {
+      const text = await navigator.clipboard.readText();
+      if (text) this.text = text;
+    } catch {
+      // 浏览器/原生环境不支持剪贴板读取时静默忽略
+    }
+  }
+
   private send(mode: 'keyboard' | 'clipboard') {
     if (!this.text) return;
     localStorage.setItem(this.STORAGE_KEY, this.text);
@@ -46,6 +55,5 @@ export class SendTextModalComponent implements OnInit {
       ? Protocol2Messages.getSendTextMessage(this.text)
       : Protocol2Messages.getSendTextClipboardMessage(this.text);
     this.websocketService.send(message);
-    this.modalController.dismiss();
   }
 }
