@@ -54,8 +54,8 @@
   "sendText": {
     "title": "Send text",
     "placeholder": "Enter text to send...",
-    "sendKeyboard": "Keyboard input",
-    "sendClipboard": "Paste (clipboard)",
+    "sendKeyboard": "Send keystrokes",
+    "sendClipboard": "Send text",
     "pasteFromClipboard": "Paste from clipboard"
   },
   "home": {

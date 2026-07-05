@@ -4,6 +4,11 @@
       <ion-button (click)="cancel()">{{ 'common.cancel' | translate }}</ion-button>
     </ion-buttons>
     <ion-title>{{ 'sendText.title' | translate }}</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="pasteFromClipboard()">
+        <ion-icon name="clipboard-outline" size="large"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -22,12 +27,8 @@
       {{ 'sendText.sendKeyboard' | translate }}
     </ion-button>
     <ion-button expand="block" color="secondary" (click)="sendClipboard()">
-      <ion-icon slot="start" name="clipboard-outline"></ion-icon>
+      <ion-icon slot="start" name="paper-plane-outline"></ion-icon>
       {{ 'sendText.sendClipboard' | translate }}
-    </ion-button>
-    <ion-button expand="block" fill="outline" (click)="pasteFromClipboard()">
-      <ion-icon slot="start" name="clipboard"></ion-icon>
-      {{ 'sendText.pasteFromClipboard' | translate }}
     </ion-button>
   </div>
 </ion-content>

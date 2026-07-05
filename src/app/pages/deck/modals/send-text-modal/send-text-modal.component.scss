@@ -4,6 +4,10 @@
 
 .send-buttons {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 8px;
+
+  ion-button {
+    flex: 1;
+  }
 }
