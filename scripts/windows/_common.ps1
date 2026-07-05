@@ -1071,15 +1071,53 @@ function Install-WingetPackage {
   npm install --legacy-peer-deps，而不是普通 npm install。
 #>
 function Ensure-NodeModules {
-  if (Test-Path -LiteralPath (Join-Path $script:RootDir 'node_modules')) {
-    Write-Ok "node_modules 已存在"
+  $nodeModules = Join-Path $script:RootDir 'node_modules'
+  $ngBin       = Join-Path $nodeModules '.bin\ng.cmd'
+  $ionicBin    = Join-Path $nodeModules '.bin\ionic.cmd'
+
+  $needInstall = -not (Test-Path -LiteralPath $nodeModules) `
+              -or -not (Test-Path -LiteralPath $ngBin) `
+              -or -not (Test-Path -LiteralPath $ionicBin)
+
+  if (-not $needInstall) {
+    Write-Ok "node_modules 已存在（含 ng、ionic 可执行）"
     return
   }
-  Write-Warn "node_modules 不存在，准备执行 npm install --legacy-peer-deps"
+  if (-not (Test-Path -LiteralPath $nodeModules)) {
+    Write-Warn "node_modules 不存在，准备执行 npm install --legacy-peer-deps"
+  } else {
+    Write-Warn "node_modules 缺少 .bin/ng.cmd 或 .bin/ionic.cmd，准备执行 npm install --legacy-peer-deps"
+  }
   Invoke-NativeStreamIn -Path $script:RootDir -Block { & npm install --legacy-peer-deps }
   if ($LASTEXITCODE -ne 0) {
     throw "npm install --legacy-peer-deps failed with exit code $LASTEXITCODE"
   }
+}
+
+<#
+.SYNOPSIS
+  只校验前端构建依赖是否齐全（用于 -Check），不执行安装。
+.OUTPUTS
+  [bool] 齐全返回 true；缺失返回 false 并输出安装提示。
+#>
+function Require-WebBuildDeps {
+  $nodeModules = Join-Path $script:RootDir 'node_modules'
+  $ngBin       = Join-Path $nodeModules '.bin\ng.cmd'
+  $ionicBin    = Join-Path $nodeModules '.bin\ionic.cmd'
+
+  $missing = @()
+  if (-not (Test-Path -LiteralPath $nodeModules)) { $missing += 'node_modules' }
+  if (-not (Test-Path -LiteralPath $ngBin))       { $missing += '.bin\ng.cmd (@angular/cli)' }
+  if (-not (Test-Path -LiteralPath $ionicBin))    { $missing += '.bin\ionic.cmd (@ionic/cli)' }
+
+  if ($missing.Count -eq 0) {
+    Write-Ok "前端构建依赖已就绪（node_modules / ng / ionic）"
+    return $true
+  }
+
+  Write-Fail ("缺少前端构建依赖：{0}" -f ($missing -join ', '))
+  Write-Host "  请在项目根目录执行：npm install --legacy-peer-deps" -ForegroundColor Yellow
+  return $false
 }
 
 <#

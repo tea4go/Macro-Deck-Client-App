@@ -307,6 +307,7 @@ $ready = $true
 if (-not (Assert-JavaForAndroid)) { $ready = $false }
 if (-not (Require-AndroidReleaseEnv)) { $ready = $false }
 if (-not (Require-Command 'npx')) { $ready = $false }
+if (-not (Require-WebBuildDeps)) { $ready = $false }
 if (-not (Require-Fastlane)) { $ready = $false }
 
 if (-not $ready) {
