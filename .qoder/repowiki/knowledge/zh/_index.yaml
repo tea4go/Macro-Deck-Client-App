@@ -3,11 +3,11 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-04T17:31:19Z"
+exported_at: "2026-07-06T01:33:46Z"
 modules:
     "":
-        dir_name: Macro Deck 控制器应用（单仓三端）
-        title: Macro Deck 控制器应用（单仓三端）
+        dir_name: Macro Deck 客户端（Angular_Ionic + Capacitor 三端工程）
+        title: Macro Deck 客户端（Angular/Ionic + Capacitor 三端工程）
         scope:
             - README.md
             - package.json
@@ -351,8 +351,8 @@ modules:
         depends_on: []
         related_to: []
     android:
-        dir_name: Android 壳应用与发布流水线
-        title: Android 壳应用与发布流水线
+        dir_name: Android Capacitor 壳应用与发布流水线
+        title: Android Capacitor 壳应用与发布流水线
         scope:
             - android/
         source_files: []
@@ -361,8 +361,8 @@ modules:
         related_to:
             - path: scripts
     app:
-        dir_name: Macro Deck 控制器应用 (src_)
-        title: Macro Deck 控制器应用 (src/)
+        dir_name: Macro Deck 宏键盘控制器应用
+        title: Macro Deck 宏键盘控制器应用
         scope:
             - src/
         source_files: []
@@ -393,8 +393,8 @@ modules:
         related_to:
             - path: scripts
     scripts:
-        dir_name: 跨平台构建与发布脚本（macOS Bash _ Windows PowerShell）
-        title: 跨平台构建与发布脚本（macOS Bash / Windows PowerShell）
+        dir_name: 本地构建与发布脚本（macOS_Windows 双栈）
+        title: 本地构建与发布脚本（macOS/Windows 双栈）
         scope:
             - scripts/
         source_files: []

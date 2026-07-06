@@ -28,14 +28,16 @@
 - [environment.prod.ts](file://src/environments/environment.prod.ts)
 - [environment.web.ts](file://src/environments/environment.web.ts)
 - [environment.web.prod.ts](file://src/environments/environment.web.prod.ts)
+- [Gemfile.lock](file://Gemfile.lock)
 </cite>
 
 ## 更新摘要
 **所做更改**
-- **更新** 版本号管理：versionCode从17升级到18，保持versionName为3.0.1不变
-- **更新** 跨平台版本同步：确保Android、iOS和Web平台的版本一致性
+- **更新** 版本号管理：versionCode从28升级到37，保持versionName为3.0.1不变
+- **更新** 跨平台版本同步：所有环境配置文件（environment*.ts）与新的versionCode 37同步
+- **更新** Ruby gem版本维护：Gemfile.lock中的Ruby依赖包进行维护性更新
 - **更新** 构建配置验证：确认所有环境配置文件中的版本信息已同步更新
-- **更新** Fastlane自动化：验证CI/CD流水线中的版本递增机制正常工作
+- **更新** Fastlane自动化：CI/CD流水线中的版本递增机制正常工作
 
 ## 目录
 1. [简介](#简介)
@@ -58,7 +60,7 @@
 - 权限声明、应用配置与Intent过滤器设置
 - 构建配置（build.gradle）、混淆规则（ProGuard）与资源文件配置
 - Android特有能力：系统UI可见性控制、文件路径配置等
-- **更新**：版本管理升级，versionCode从17升级到18，支持3.0.1版本的持续发布
+- **更新**：版本管理升级，versionCode从28升级到37，支持3.0.1版本的持续发布
 - **更新**：增强的版本同步机制，确保跨平台版本一致性
 - **新增**：应用程序更新功能，包括应用内更新机制、权限配置和插件集成
 - **新增**：Capacitor插件生态系统，涵盖@capacitor-community/file-opener和@capacitor/filesystem插件
@@ -170,7 +172,7 @@ AL["activity_main.xml<br/>CoordinatorLayout+WebView"]
 NSC["network_security_config.xml<br/>明文流量配置"]
 end
 subgraph "构建与配置"
-BG["build.gradle<br/>SDK/混淆/依赖<br/>versionCode: 18, versionName: 3.0.1"]
+BG["build.gradle<br/>SDK/混淆/依赖<br/>versionCode: 37, versionName: 3.0.1"]
 VG["variables.gradle<br/>版本变量"]
 GP["gradle.properties<br/>AndroidX启用"]
 CS["capacitor.settings.gradle<br/>插件包含"]
@@ -289,7 +291,7 @@ Provider --> Paths["@xml/file_paths映射"]
 - SDK与工具链：
   - compileSdkVersion、targetSdkVersion、minSdkVersion集中于variables.gradle
   - namespace与applicationId固定为com.suchbyte.macrodeck
-  - **更新**：versionCode设置为18，versionName设置为3.0.1
+  - **更新**：versionCode设置为37，versionName设置为3.0.1
 - 构建类型：
   - release：未启用代码压缩（minifyEnabled=false），使用默认ProGuard规则与自定义proguard-rules.pro
 - 功能与依赖：
@@ -309,7 +311,7 @@ class BuildConfig {
 +minSdkVersion
 +namespace
 +applicationId
-+versionCode : 18
++versionCode : 37
 +versionName : 3.0.1
 +buildTypes
 +dataBinding
@@ -392,13 +394,13 @@ FP --> Paths["file_paths.xml映射"]
   - 提升构建效率和代码质量
 
 ### 版本号管理
-**更新** 应用版本已从2.0.0升级到3.0.1，versionCode从9大幅升级到18：
+**更新** 应用版本已从2.0.0升级到3.0.1，versionCode从9大幅升级到37：
 
 - **versionName**: 2.0.0 → 3.0.1
   - major.minor.patch语义化版本管理
   - 3.0.1版本包含重大功能更新和安全改进
 
-- **versionCode**: 9 → 18
+- **versionCode**: 9 → 37
   - 内部版本标识符显著递增
   - 支持Google Play的版本管理机制
   - 确保正确的更新顺序
@@ -414,7 +416,7 @@ FP --> Paths["file_paths.xml映射"]
 
 ```mermaid
 flowchart TD
-Source["Android build.gradle<br/>versionCode: 18<br/>versionName: 3.0.1"] --> SyncTool["sync_version_bywin.ps1<br/>版本同步工具"]
+Source["Android build.gradle<br/>versionCode: 37<br/>versionName: 3.0.1"] --> SyncTool["sync_version_bywin.ps1<br/>版本同步工具"]
 SyncTool --> iOS["iOS project.pbxproj<br/>CURRENT_PROJECT_VERSION<br/>MARKETING_VERSION"]
 SyncTool --> Web["Web environment*.ts<br/>version & versionCode"]
 SyncTool --> Fastlane["Fastlane<br/>自动化构建"]
@@ -553,7 +555,7 @@ Filesystem["@capacitor/filesystem<br/>文件系统"]
 FileOpener["@capacitor-community/file-opener<br/>文件打开器"]
 End
 subgraph "其他功能"
-ScreenOrientation["@capawesome/capacitor-screen-orientation<br/>屏幕方向"]
+ScreenOrientation["@awesome-cupacitor-screen-orientation<br/>屏幕方向"]
 KeepAwake["@capacitor-community/keep-awake<br/>保持唤醒"]
 Barcode["@capacitor-community/barcode-scanner<br/>条形码扫描"]
 End
@@ -569,7 +571,7 @@ Core --> Barcode
 ```
 
 **图表来源**
-- [package.json:30-36](file://package.json#L30-L36)
+- [package.json:30-36](file://package.json#L30-36)
 - [capacitor.plugins.json:1-43](file://android/app/src/main/assets/capacitor.plugins.json#L1-L43)
 
 ### 文件操作插件
@@ -587,7 +589,7 @@ Core --> Barcode
 - 需要REQUEST_INSTALL_PACKAGES权限
 
 **章节来源**
-- [package.json:30-36](file://package.json#L30-L36)
+- [package.json:30-36](file://package.json#L30-36)
 - [capacitor.plugins.json:7-25](file://android/app/src/main/assets/capacitor.plugins.json#L7-L25)
 - [update.service.ts:115-134](file://src/app/services/update/update.service.ts#L115-L134)
 
@@ -599,7 +601,7 @@ Core --> Barcode
 
 **章节来源**
 - [capacitor.plugins.json:1-43](file://android/app/src/main/assets/capacitor.plugins.json#L1-L43)
-- [package.json:30-36](file://package.json#L30-L36)
+- [package.json:30-36](file://package.json#L30-36)
 
 ## 依赖关系分析
 - 组件耦合：
@@ -623,7 +625,7 @@ Core --> Barcode
 graph TB
 MA["MainActivity"] --> AM["AndroidManifest"]
 AM --> FP["FileProvider"]
-BG["build.gradle<br/>versionCode: 18"] --> Vars["variables.gradle"]
+BG["build.gradle<br/>versionCode: 37"] --> Vars["variables.gradle"]
 BG --> Deps["Capacitor/AndroidX依赖"]
 CS["capacitor.settings.gradle"] --> Plugins["插件集合"]
 US["UpdateService"] --> Plugins
@@ -642,7 +644,7 @@ SV["sync_version_bywin.ps1"] --> BG
 - [variables.gradle:1-17](file://android/variables.gradle#L1-L17)
 - [capacitor.settings.gradle:1-28](file://android/capacitor.settings.gradle#L1-L28)
 - [update.service.ts:39-41](file://src/app/services/update/update.service.ts#L39-L41)
-- [package.json:30-36](file://package.json#L30-L36)
+- [package.json:30-36](file://package.json#L30-36)
 - [Fastfile:1-81](file://android/fastlane/Fastfile#L1-L81)
 - [sync_version_bywin.ps1:1-80](file://scripts/windows/sync_version_bywin.ps1#L1-L80)
 
@@ -653,7 +655,7 @@ SV["sync_version_bywin.ps1"] --> BG
 - [variables.gradle:1-17](file://android/variables.gradle#L1-L17)
 - [capacitor.settings.gradle:1-28](file://android/capacitor.settings.gradle#L1-L28)
 - [update.service.ts:39-41](file://src/app/services/update/update.service.ts#L39-L41)
-- [package.json:30-36](file://package.json#L30-L36)
+- [package.json:30-36](file://package.json#L30-36)
 - [Fastfile:1-81](file://android/fastlane/Fastfile#L1-L81)
 - [sync_version_bywin.ps1:1-80](file://scripts/windows/sync_version_bywin.ps1#L1-L80)
 
@@ -711,6 +713,10 @@ SV["sync_version_bywin.ps1"] --> BG
   - Fastlane构建失败：确认环境变量BUILD_NUMBER和VERSION_NUMBER设置
   - 跨平台版本不一致：重新执行版本同步工具
   - 签名密钥问题：检查keystore文件和密码配置
+- **新增**：Ruby gem版本问题：
+  - Gemfile.lock更新后重新执行bundle install
+  - 确认Ruby版本与gem版本兼容性
+  - 检查Fastlane版本更新后的依赖关系
 
 **章节来源**
 - [MainActivity.java:10-29](file://android/app/src/main/java/com/suchbyte/macrodeck/MainActivity.java#L10-L29)
@@ -723,9 +729,10 @@ SV["sync_version_bywin.ps1"] --> BG
 - [variables.gradle:1-17](file://android/variables.gradle#L1-L17)
 - [sync_version_bywin.ps1:66-79](file://scripts/windows/sync_version_bywin.ps1#L66-L79)
 - [Fastfile:5-23](file://android/fastlane/Fastfile#L5-L23)
+- [Gemfile.lock:76-76](file://Gemfile.lock#L76-L76)
 
 ## 结论
-本Android集成方案以Capacitor为核心，结合系统UI可见性控制与WebView容器，实现了稳定的沉浸式体验与跨平台能力。通过将minSdkVersion从22升级到23，应用获得了更好的平台兼容性和安全性保障。**更新**的版本管理系统将versionCode从17升级到18，versionName保持在3.0.1，代表了项目的持续演进和稳定性提升。**新增**的应用程序更新功能通过@capacitor-community/file-opener和@capacitor/filesystem插件，提供了完整的应用内更新解决方案。最新的SDK升级（compileSdkVersion和targetSdkVersion到35）确保了对现代Android特性的支持和最佳性能表现。**新增**的Fastlane自动化和版本同步机制确保了跨平台版本的一致性和构建效率。通过集中化的版本管理与清晰的资源/清单配置，提升了可维护性与一致性。建议在后续迭代中逐步引入混淆与性能监控，同时完善权限最小化与安全策略，以满足更严格的生产要求。
+本Android集成方案以Capacitor为核心，结合系统UI可见性控制与WebView容器，实现了稳定的沉浸式体验与跨平台能力。通过将minSdkVersion从22升级到23，应用获得了更好的平台兼容性和安全性保障。**更新**的版本管理系统将versionCode从28升级到37，versionName保持在3.0.1，代表了项目的持续演进和稳定性提升。**新增**的应用程序更新功能通过@capacitor-community/file-opener和@capacitor/filesystem插件，提供了完整的应用内更新解决方案。最新的SDK升级（compileSdkVersion和targetSdkVersion到35）确保了对现代Android特性的支持和最佳性能表现。**新增**的Fastlane自动化和版本同步机制确保了跨平台版本的一致性和构建效率。通过集中化的版本管理与清晰的资源/清单配置，提升了可维护性与一致性。建议在后续迭代中逐步引入混淆与性能监控，同时完善权限最小化与安全策略，以满足更严格的生产要求。
 
 ## 附录
 - 构建、调试与发布流程（建议步骤）：
@@ -760,3 +767,7 @@ SV["sync_version_bywin.ps1"] --> BG
   - 使用Fastlane进行自动化版本递增
   - 定期执行版本同步确保跨平台一致性
   - 建立版本回滚和修复流程
+- **新增**：Ruby gem维护建议：
+  - 定期更新Gemfile.lock中的依赖版本
+  - 测试Fastlane版本更新后的兼容性
+  - 维护Ruby环境与gem版本的对应关系

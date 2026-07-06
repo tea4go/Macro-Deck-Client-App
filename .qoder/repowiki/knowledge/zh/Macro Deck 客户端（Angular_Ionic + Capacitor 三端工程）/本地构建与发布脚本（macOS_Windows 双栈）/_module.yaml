@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: scripts
-title: 跨平台构建与发布脚本（macOS Bash / Windows PowerShell）
+title: 本地构建与发布脚本（macOS/Windows 双栈）
 scope:
     - scripts/
 source_files: []

@@ -1,6 +1,6 @@
 schema_version: 1
 module_path: ""
-title: Macro Deck 控制器应用（单仓三端）
+title: Macro Deck 客户端（Angular/Ionic + Capacitor 三端工程）
 scope:
     - README.md
     - package.json
