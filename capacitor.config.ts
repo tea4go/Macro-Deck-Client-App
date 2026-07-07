@@ -7,6 +7,8 @@ const config: CapacitorConfig = {
   server: {
     androidScheme: 'http'
   },
+  // 临时诊断开启，验证完再恢复默认
+  loggingBehavior: 'production',
   ios: {
     scheme: 'Macro Deck Client'
   }

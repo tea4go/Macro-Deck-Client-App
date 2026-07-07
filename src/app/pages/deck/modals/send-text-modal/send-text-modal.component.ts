@@ -95,18 +95,19 @@ export class SendTextModalComponent implements OnInit, OnDestroy {
     if (!this.text) return;
     localStorage.setItem(this.STORAGE_KEY, this.text);
 
-    // 剪贴板模式：将换行统一规范化为 Windows 风格 \r\n。
-    // 原因：HTML textarea 的换行是 \n（LF），Windows 剪贴板文本约定用 \r\n（CRLF）；
-    // 记事本能识别单 \n，但 cmd.exe/Windows Terminal 的粘贴处理只认 \r\n，
-    // 收到 \n 会当空白吞掉，导致多行文本粘贴后被合并成一行。
-    // 键盘模式保持原文，由服务端逐字符模拟按键（服务端会把 \n 视作 Enter）。
+    // 剪贴板模式：换行统一为 Windows 风格 \r\n（cmd.exe 粘贴才认）。
+    // 键盘模式：换行统一为 \r（回车键标准字符）。原本发 \n：记事本对 \n 松散兼容
+    // 能换行，但 cmd 收到 \n 什么都不做，因此多行文本在 cmd 里既不换行也不执行。
+    // 改发 \r 后：记事本正常换行，cmd 视作 Enter 键，逐行执行。
+    const normalized = this.text.replace(/\r\n/g, '\n');
     const payload = mode === 'clipboard'
-      ? this.text.replace(/\r\n/g, '\n').replace(/\n/g, '\r\n')
-      : this.text;
+      ? normalized.replace(/\n/g, '\r\n')
+      : normalized.replace(/\n/g, '\r');
 
     const lfCount = (this.text.match(/\n/g) || []).length;
     const crlfCount = (payload.match(/\r\n/g) || []).length;
-    console.warn(`[SendText] send mode=${mode} len=${payload.length} lfInSource=${lfCount} crlfInPayload=${crlfCount}`);
+    const crOnlyCount = (payload.match(/\r/g) || []).length - crlfCount;
+    console.warn(`[SendText] send mode=${mode} len=${payload.length} lfInSource=${lfCount} crlfInPayload=${crlfCount} crOnlyInPayload=${crOnlyCount}`);
 
     const message = mode === 'keyboard'
       ? Protocol2Messages.getSendTextMessage(payload)
