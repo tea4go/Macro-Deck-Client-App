@@ -120,7 +120,9 @@ export class WebsocketService {
         await this.protocolHandlerService.handleMessage(message);
       },
       error: async error => {
+        console.info(`[WS] socket error handler fired: ${error?.name ?? error}`);
         await this.loadingService.dismiss();
+        console.info('[WS] emit closed (from error handler)');
         this.closed.emit();
         this.connecting = false;
         // 处理安全错误（如 SSL 证书不受信任）
@@ -142,9 +144,10 @@ export class WebsocketService {
    */
   private subscribeOpenClose() {
     this.connectionClosed.subscribe(async closeEvent => {
-      console.info("Closed with code " + closeEvent.code);
+      console.info(`[WS] connectionClosed fired code=${closeEvent.code} closing=${this.closing} isConnected=${this.isConnected}`);
       await this.loadingService.dismiss();
       this.subscription.unsubscribe();
+      console.info('[WS] emit closed');
       this.closed.emit();
       this.connecting = false;
 
@@ -197,6 +200,7 @@ export class WebsocketService {
    * @param closeEvent 关闭事件对象
    */
   private async handleError(closeEvent: CloseEvent) {
+    console.info(`[WS] handleError code=${closeEvent.code} isConnected=${this.isConnected} webVersion=${environment.webVersion}`);
     // 正常关闭码，无需处理
     if (closeEvent.code == 1000) {
       return;
@@ -204,12 +208,15 @@ export class WebsocketService {
 
     // Web 版本直接触发连接丢失事件
     if (environment.webVersion) {
+      console.info('[WS] emit connectionLost (web)');
       this.connectionLost.emit();
       return;
     }
 
     // 已连接状态下断开，导航到连接丢失页面
     if (this.isConnected) {
+      console.info('[WS] emit connectionLost (native) before navigating to ConnectionLost');
+      this.connectionLost.emit();
       this.isConnected = false;
       await this.navigationService.navigateTo(NavigationDestination.ConnectionLost);
       return;
@@ -217,6 +224,7 @@ export class WebsocketService {
 
     // 未建立连接时失败，触发连接失败事件并传递错误详情
     let closeDetails = `Code: ${closeEvent.code}\nReason: ${closeEvent.reason}\nWas clean: ${closeEvent.wasClean}`;
+    console.info('[WS] emit connectionFailed: ' + closeDetails);
     this.connectionFailed.emit(closeDetails);
   }
 

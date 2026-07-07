@@ -28,19 +28,30 @@ export class SendTextModalComponent implements OnInit, OnDestroy {
     const saved = localStorage.getItem(this.STORAGE_KEY);
     if (saved) this.text = saved;
 
+    console.info('[SendText] ngOnInit subscribing to ws events');
     // 连接断开时自动关闭弹窗（closed 事件覆盖主动关闭与被动断开）
     this.subscriptions.add(
-      this.websocketService.closed.subscribe(() => this.dismissIfOpen())
+      this.websocketService.closed.subscribe(() => {
+        console.info('[SendText] received closed');
+        this.dismissIfOpen('closed');
+      })
     );
     this.subscriptions.add(
-      this.websocketService.connectionLost.subscribe(() => this.dismissIfOpen())
+      this.websocketService.connectionLost.subscribe(() => {
+        console.info('[SendText] received connectionLost');
+        this.dismissIfOpen('connectionLost');
+      })
     );
     this.subscriptions.add(
-      this.websocketService.connectionFailed.subscribe(() => this.dismissIfOpen())
+      this.websocketService.connectionFailed.subscribe(() => {
+        console.info('[SendText] received connectionFailed');
+        this.dismissIfOpen('connectionFailed');
+      })
     );
   }
 
   ngOnDestroy() {
+    console.info('[SendText] ngOnDestroy unsubscribe');
     this.subscriptions.unsubscribe();
   }
 
@@ -48,9 +59,17 @@ export class SendTextModalComponent implements OnInit, OnDestroy {
     this.modalController.dismiss();
   }
 
-  private async dismissIfOpen() {
-    const top = await this.modalController.getTop();
-    if (top) { await this.modalController.dismiss(); }
+  private async dismissIfOpen(reason: string) {
+    try {
+      const top = await this.modalController.getTop();
+      console.info(`[SendText] dismissIfOpen reason=${reason} hasTop=${!!top}`);
+      if (top) {
+        await this.modalController.dismiss();
+        console.info(`[SendText] dismissed (reason=${reason})`);
+      }
+    } catch (e) {
+      console.error(`[SendText] dismissIfOpen error (reason=${reason}):`, e);
+    }
   }
 
   sendKeyboard() {
