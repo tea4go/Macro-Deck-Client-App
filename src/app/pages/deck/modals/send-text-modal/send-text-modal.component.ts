@@ -1,5 +1,5 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
-import {IonicModule, ModalController} from '@ionic/angular';
+import {IonicModule, ModalController, ToastController} from '@ionic/angular';
 import {FormsModule} from '@angular/forms';
 import {TranslatePipe} from '@ngx-translate/core';
 import {Subscription} from 'rxjs';
@@ -21,7 +21,8 @@ export class SendTextModalComponent implements OnInit, OnDestroy {
 
   constructor(
     private modalController: ModalController,
-    private websocketService: WebsocketService
+    private websocketService: WebsocketService,
+    private toastController: ToastController
   ) {}
 
   ngOnInit() {
@@ -107,11 +108,23 @@ export class SendTextModalComponent implements OnInit, OnDestroy {
     const lfCount = (this.text.match(/\n/g) || []).length;
     const crlfCount = (payload.match(/\r\n/g) || []).length;
     const crOnlyCount = (payload.match(/\r/g) || []).length - crlfCount;
-    console.warn(`[SendText] send mode=${mode} len=${payload.length} lfInSource=${lfCount} crlfInPayload=${crlfCount} crOnlyInPayload=${crOnlyCount}`);
+    const summary = `mode=${mode} len=${payload.length} lf=${lfCount} cr=${crOnlyCount} crlf=${crlfCount}`;
+    console.warn(`[SendText] send ${summary}`);
+    this.showDiagToast(summary);
 
     const message = mode === 'keyboard'
       ? Protocol2Messages.getSendTextMessage(payload)
       : Protocol2Messages.getSendTextClipboardMessage(payload);
     this.websocketService.send(message);
+  }
+
+  private async showDiagToast(summary: string) {
+    const toast = await this.toastController.create({
+      message: summary,
+      duration: 2500,
+      position: 'top',
+      color: 'dark'
+    });
+    await toast.present();
   }
 }
