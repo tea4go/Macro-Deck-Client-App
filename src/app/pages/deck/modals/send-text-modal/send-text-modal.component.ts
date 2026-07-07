@@ -29,32 +29,31 @@ export class SendTextModalComponent implements OnInit, OnDestroy {
     if (saved) this.text = saved;
 
     // 布局标识：send-buttons 在 header 内（第二个 ion-toolbar），不再放 footer。
-    // 用于确认运行时代码是否为最新版：如果日志里 layout != header-buttons-v2，说明 app 还在跑旧构建。
-    console.info('[SendText] BUILD_MARK layout=header-buttons-v2 (2026-07-07)');
-    console.info('[SendText] ngOnInit subscribing to ws events');
-    // 连接断开时自动关闭弹窗（closed 事件覆盖主动关闭与被动断开）
+    // 用 console.warn 而非 info：Android WebView 默认只把 warn/error 转发到 logcat。
+    console.warn('[SendText] BUILD_MARK layout=header-buttons-v2 (2026-07-07)');
+    console.warn('[SendText] ngOnInit subscribing to ws events');
     this.subscriptions.add(
       this.websocketService.closed.subscribe(() => {
-        console.info('[SendText] received closed');
+        console.warn('[SendText] received closed');
         this.dismissIfOpen('closed');
       })
     );
     this.subscriptions.add(
       this.websocketService.connectionLost.subscribe(() => {
-        console.info('[SendText] received connectionLost');
+        console.warn('[SendText] received connectionLost');
         this.dismissIfOpen('connectionLost');
       })
     );
     this.subscriptions.add(
       this.websocketService.connectionFailed.subscribe(() => {
-        console.info('[SendText] received connectionFailed');
+        console.warn('[SendText] received connectionFailed');
         this.dismissIfOpen('connectionFailed');
       })
     );
   }
 
   ngOnDestroy() {
-    console.info('[SendText] ngOnDestroy unsubscribe');
+    console.warn('[SendText] ngOnDestroy unsubscribe');
     this.subscriptions.unsubscribe();
   }
 
@@ -65,10 +64,10 @@ export class SendTextModalComponent implements OnInit, OnDestroy {
   private async dismissIfOpen(reason: string) {
     try {
       const top = await this.modalController.getTop();
-      console.info(`[SendText] dismissIfOpen reason=${reason} hasTop=${!!top}`);
+      console.warn(`[SendText] dismissIfOpen reason=${reason} hasTop=${!!top}`);
       if (top) {
         await this.modalController.dismiss();
-        console.info(`[SendText] dismissed (reason=${reason})`);
+        console.warn(`[SendText] dismissed (reason=${reason})`);
       }
     } catch (e) {
       console.error(`[SendText] dismissIfOpen error (reason=${reason}):`, e);
@@ -107,7 +106,7 @@ export class SendTextModalComponent implements OnInit, OnDestroy {
 
     const lfCount = (this.text.match(/\n/g) || []).length;
     const crlfCount = (payload.match(/\r\n/g) || []).length;
-    console.info(`[SendText] send mode=${mode} len=${payload.length} lfInSource=${lfCount} crlfInPayload=${crlfCount}`);
+    console.warn(`[SendText] send mode=${mode} len=${payload.length} lfInSource=${lfCount} crlfInPayload=${crlfCount}`);
 
     const message = mode === 'keyboard'
       ? Protocol2Messages.getSendTextMessage(payload)
