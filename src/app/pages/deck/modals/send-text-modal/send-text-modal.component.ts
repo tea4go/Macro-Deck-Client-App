@@ -1,7 +1,8 @@
-import {Component, OnInit} from '@angular/core';
+import {Component, OnDestroy, OnInit} from '@angular/core';
 import {IonicModule, ModalController} from '@ionic/angular';
 import {FormsModule} from '@angular/forms';
 import {TranslatePipe} from '@ngx-translate/core';
+import {Subscription} from 'rxjs';
 import {WebsocketService} from '../../../../services/websocket/websocket.service';
 import {Protocol2Messages} from '../../../../datatypes/protocol2/protocol2-messages';
 
@@ -12,10 +13,11 @@ import {Protocol2Messages} from '../../../../datatypes/protocol2/protocol2-messa
   standalone: true,
   imports: [IonicModule, FormsModule, TranslatePipe]
 })
-export class SendTextModalComponent implements OnInit {
+export class SendTextModalComponent implements OnInit, OnDestroy {
   text: string = '';
 
   private readonly STORAGE_KEY = 'send_text_last_input';
+  private readonly subscriptions = new Subscription();
 
   constructor(
     private modalController: ModalController,
@@ -25,10 +27,30 @@ export class SendTextModalComponent implements OnInit {
   ngOnInit() {
     const saved = localStorage.getItem(this.STORAGE_KEY);
     if (saved) this.text = saved;
+
+    // 连接断开时自动关闭弹窗（closed 事件覆盖主动关闭与被动断开）
+    this.subscriptions.add(
+      this.websocketService.closed.subscribe(() => this.dismissIfOpen())
+    );
+    this.subscriptions.add(
+      this.websocketService.connectionLost.subscribe(() => this.dismissIfOpen())
+    );
+    this.subscriptions.add(
+      this.websocketService.connectionFailed.subscribe(() => this.dismissIfOpen())
+    );
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.unsubscribe();
   }
 
   cancel() {
     this.modalController.dismiss();
+  }
+
+  private async dismissIfOpen() {
+    const top = await this.modalController.getTop();
+    if (top) { await this.modalController.dismiss(); }
   }
 
   sendKeyboard() {
