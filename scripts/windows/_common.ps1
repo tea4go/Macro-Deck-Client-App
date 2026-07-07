@@ -908,6 +908,95 @@ function Assert-JavaForAndroid {
   return $true
 }
 
+# ─── jvms 版本切换 ───────────────────────────────────────────────────────────
+
+<#
+.SYNOPSIS
+  jvms 命令是否可用。
+#>
+function Test-JvmsAvailable {
+  return $null -ne (Get-CommandPath 'jvms')
+}
+
+<#
+.SYNOPSIS
+  解析 jvms list 输出。
+.OUTPUTS
+  [hashtable] @{ Versions = @('openjdk-22.0.2', 'openjdk-21', ...); Current = 'openjdk-17.0.2' }
+  jvms 不可用时返回 null。
+.NOTES
+  jvms list 输出行样例：
+    "  1 - openjdk-22.0.2"
+    "* 4 - openjdk-17.0.2"（* 表示当前使用）
+#>
+function Get-JvmsListInfo {
+  if (-not (Test-JvmsAvailable)) { return $null }
+  $lines = & jvms list 2>&1
+  $versions = @()
+  $current = $null
+  foreach ($line in $lines) {
+    $text = [string]$line
+    $m = [regex]::Match($text, '^(\s*\*?)\s*\d+\s*-\s*(\S+)\s*$')
+    if ($m.Success) {
+      $v = $m.Groups[2].Value
+      $versions += $v
+      if ($m.Groups[1].Value -match '\*') { $current = $v }
+    }
+  }
+  return @{ Versions = $versions; Current = $current }
+}
+
+<#
+.SYNOPSIS
+  从已安装的 jvms 版本里找出主版本号等于 MajorVersion 的第一个。
+.PARAMETER MajorVersion
+  Java 主版本号，如 21。
+.OUTPUTS
+  [string] 版本名（如 openjdk-21）；无匹配返回 null。
+#>
+function Find-JvmsVersionMatching {
+  param([int]$MajorVersion)
+  $info = Get-JvmsListInfo
+  if ($null -eq $info) { return $null }
+  foreach ($v in $info.Versions) {
+    $m = [regex]::Match($v, '(\d+)')
+    if ($m.Success -and [int]$m.Groups[1].Value -eq $MajorVersion) { return $v }
+  }
+  return $null
+}
+
+<#
+.SYNOPSIS
+  通过 jvms use 切换 JDK 版本，并从注册表刷新当前进程的 PATH/JAVA_HOME。
+.PARAMETER Version
+  jvms 已安装的版本名（如 openjdk-21）。
+.OUTPUTS
+  [bool] 切换是否成功。
+.NOTES
+  jvms 修改注册表的 JAVA_HOME/PATH，但当前 PowerShell 进程的 $env:Path 是启动
+  快照、不会自动同步；本函数完成后从注册表重读，让切换在本会话立即生效。
+#>
+function Set-JvmsVersion {
+  param([string]$Version)
+  if (-not (Test-JvmsAvailable)) { return $false }
+
+  Invoke-NativeStream -Block { & jvms use $Version }
+  if ($LASTEXITCODE -ne 0) {
+    Write-Fail "jvms use $Version 失败（退出码：$LASTEXITCODE）"
+    return $false
+  }
+
+  $machinePath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+  $userPath    = [Environment]::GetEnvironmentVariable('Path', 'User')
+  $env:Path = @($machinePath, $userPath |
+    Where-Object { -not [string]::IsNullOrWhiteSpace($_) }) -join ';'
+  $userJavaHome    = [Environment]::GetEnvironmentVariable('JAVA_HOME', 'User')
+  $machineJavaHome = [Environment]::GetEnvironmentVariable('JAVA_HOME', 'Machine')
+  if     (-not [string]::IsNullOrWhiteSpace($userJavaHome))    { $env:JAVA_HOME = $userJavaHome }
+  elseif (-not [string]::IsNullOrWhiteSpace($machineJavaHome)) { $env:JAVA_HOME = $machineJavaHome }
+  return $true
+}
+
 # ─── Misc helpers ────────────────────────────────────────────────────────────
 <#
 .SYNOPSIS

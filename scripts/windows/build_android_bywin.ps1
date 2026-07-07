@@ -303,46 +303,75 @@ Write-Banner '构建 Android release'
 
 Load-AndroidSigningPs1 -FilePath $signingFile
 
-$ready = $true
-if (-not (Assert-JavaForAndroid)) { $ready = $false }
-if (-not (Require-AndroidReleaseEnv)) { $ready = $false }
-if (-not (Require-Command 'npx')) { $ready = $false }
-if (-not (Require-WebBuildDeps)) { $ready = $false }
-if (-not (Require-Fastlane)) { $ready = $false }
-
-if (-not $ready) {
-  exit 1
+# 当前 Java 版本不是 21 时，尝试用 jvms 自动切换；构建结束/异常再切回。
+$originalJvmsVersion = $null
+$currentJavaMajor = Get-JavaMajorVersion
+if ($currentJavaMajor -ne 21) {
+  if (Test-JvmsAvailable) {
+    $target = Find-JvmsVersionMatching -MajorVersion 21
+    if ($target) {
+      $info = Get-JvmsListInfo
+      $originalJvmsVersion = $info.Current
+      Write-Warn "当前 Java $currentJavaMajor 不匹配，用 jvms 切换到 $target（原：$originalJvmsVersion）"
+      if (-not (Set-JvmsVersion -Version $target)) {
+        $originalJvmsVersion = $null
+      }
+    } else {
+      Write-Warn "jvms 已安装但未找到 JDK 21，建议：jvms install 21"
+    }
+  } else {
+    Write-Warn "未检测到 jvms 命令，无法自动切换 JDK 21"
+  }
 }
 
-Write-Ok "BUILD_NUMBER=$env:BUILD_NUMBER"
-Write-Ok "VERSION_NUMBER=$env:VERSION_NUMBER"
-Write-Ok "KEYSTORE_FILE_PATH=$env:KEYSTORE_FILE_PATH"
-Write-Ok "KEYSTORE_FILE_ALIAS=$env:KEYSTORE_FILE_ALIAS"
+try {
+  $ready = $true
+  if (-not (Assert-JavaForAndroid)) { $ready = $false }
+  if (-not (Require-AndroidReleaseEnv)) { $ready = $false }
+  if (-not (Require-Command 'npx')) { $ready = $false }
+  if (-not (Require-WebBuildDeps)) { $ready = $false }
+  if (-not (Require-Fastlane)) { $ready = $false }
 
-if ($Check) {
-  Write-Ok 'Android release 环境检查通过'
+  if (-not $ready) {
+    exit 1
+  }
+
+  Write-Ok "BUILD_NUMBER=$env:BUILD_NUMBER"
+  Write-Ok "VERSION_NUMBER=$env:VERSION_NUMBER"
+  Write-Ok "KEYSTORE_FILE_PATH=$env:KEYSTORE_FILE_PATH"
+  Write-Ok "KEYSTORE_FILE_ALIAS=$env:KEYSTORE_FILE_ALIAS"
+
+  if ($Check) {
+    Write-Ok 'Android release 环境检查通过'
+    exit 0
+  }
+
+  Invoke-IonicBuild 'production'
+  Invoke-CapSync 'android'
+
+  $androidDir = Join-Path $script:RootDir 'android'
+  $fastlane = Get-FastlaneCommand
+  Write-Host "  $($fastlane.Display) 构建" -ForegroundColor Cyan
+  $fastlaneCommand = $fastlane.Command
+  $fastlaneArguments = @($fastlane.Arguments + @('build'))
+  $code = Invoke-NativeIn -Path $androidDir -Block { & $fastlaneCommand @fastlaneArguments }
+  if ($code -ne 0) { exit $code }
+
+  # fastlane 已把（自增后的）versionCode/versionName 写回 build.gradle，
+  # 以它为源同步到 iOS 与 Web，保持三端版本一致。
+  Sync-AppVersion
+
+  $outName = "MacroDeckClient-$env:VERSION_NUMBER-$env:BUILD_NUMBER"
+  $apkPath = Join-Path $script:RootDir "android\app\build\outputs\apk\release\$outName.apk"
+  $aabPath = Join-Path $script:RootDir "android\app\build\outputs\bundle\release\$outName.aab"
+  Write-Ok "Android release APK 产物: $apkPath"
+  Write-Ok "Android release AAB 产物: $aabPath"
+
   exit 0
 }
-
-Invoke-IonicBuild 'production'
-Invoke-CapSync 'android'
-
-$androidDir = Join-Path $script:RootDir 'android'
-$fastlane = Get-FastlaneCommand
-Write-Host "  $($fastlane.Display) 构建" -ForegroundColor Cyan
-$fastlaneCommand = $fastlane.Command
-$fastlaneArguments = @($fastlane.Arguments + @('build'))
-$code = Invoke-NativeIn -Path $androidDir -Block { & $fastlaneCommand @fastlaneArguments }
-if ($code -ne 0) { exit $code }
-
-# fastlane 已把（自增后的）versionCode/versionName 写回 build.gradle，
-# 以它为源同步到 iOS 与 Web，保持三端版本一致。
-Sync-AppVersion
-
-$outName = "MacroDeckClient-$env:VERSION_NUMBER-$env:BUILD_NUMBER"
-$apkPath = Join-Path $script:RootDir "android\app\build\outputs\apk\release\$outName.apk"
-$aabPath = Join-Path $script:RootDir "android\app\build\outputs\bundle\release\$outName.aab"
-Write-Ok "Android release APK 产物: $apkPath"
-Write-Ok "Android release AAB 产物: $aabPath"
-
-exit 0
+finally {
+  if ($originalJvmsVersion) {
+    Write-Host "  恢复 jvms 版本：$originalJvmsVersion" -ForegroundColor Cyan
+    $null = Set-JvmsVersion -Version $originalJvmsVersion
+  }
+}
