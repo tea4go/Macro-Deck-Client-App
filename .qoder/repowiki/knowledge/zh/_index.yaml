@@ -3,11 +3,11 @@ schema_version: 1
 locale: zh-CN
 branch: main
 nodes_managed: true
-exported_at: "2026-07-06T01:33:46Z"
+exported_at: "2026-07-12T06:52:59Z"
 modules:
     "":
-        dir_name: Macro Deck 客户端（Angular_Ionic + Capacitor 三端工程）
-        title: Macro Deck 客户端（Angular/Ionic + Capacitor 三端工程）
+        dir_name: Macro Deck Client 跨端应用根工程
+        title: Macro Deck Client 跨端应用根工程
         scope:
             - README.md
             - package.json
@@ -346,6 +346,7 @@ modules:
         children:
             - android
             - app
+            - docs
             - ios
             - scripts
         depends_on: []
@@ -369,7 +370,9 @@ modules:
         children:
             - app/core
         depends_on: []
-        related_to: []
+        related_to:
+            - path: docs
+            - path: scripts
     app/core:
         dir_name: 应用根模块与引导入口
         title: 应用根模块与引导入口
@@ -382,6 +385,16 @@ modules:
         children: []
         depends_on: []
         related_to: []
+    docs:
+        dir_name: Macro Deck Client 需求与设计文档
+        title: Macro Deck Client 需求与设计文档
+        scope:
+            - docs/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: app
     ios:
         dir_name: iOS 客户端应用与自动化发布
         title: iOS 客户端应用与自动化发布
@@ -393,8 +406,8 @@ modules:
         related_to:
             - path: scripts
     scripts:
-        dir_name: 本地构建与发布脚本（macOS_Windows 双栈）
-        title: 本地构建与发布脚本（macOS/Windows 双栈）
+        dir_name: 跨平台本地构建与发布脚本集（macOS Bash _ Windows PowerShell）
+        title: 跨平台本地构建与发布脚本集（macOS Bash / Windows PowerShell）
         scope:
             - scripts/
         source_files: []
@@ -402,4 +415,5 @@ modules:
         depends_on: []
         related_to:
             - path: android
+            - path: app
             - path: ios

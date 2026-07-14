@@ -15,6 +15,8 @@
 - [insecure-connection.component.ts](file://src/app/pages/home/modals/insecure-connection/insecure-connection.component.ts)
 - [connection-lost.page.ts](file://src/app/pages/connection-lost/connection-lost.page.ts)
 - [web-home.page.ts](file://src/app/pages/web-home/web-home.page.ts)
+- [home.page.ts](file://src/app/pages/home/home.page.ts)
+- [connection-failed.component.ts](file://src/app/pages/home/modals/connection-failed/connection-failed.component.ts)
 - [network_security_config.xml](file://resources/android/xml/network_security_config.xml)
 - [loading.service.ts](file://src/app/services/loading/loading.service.ts)
 - [connecting.component.ts](file://src/app/pages/home/modals/connecting/connecting.component.ts)
@@ -24,10 +26,10 @@
 
 ## 更新摘要
 **所做更改**
-- 更新了WebSocket连接等待状态的国际化实现细节
-- 新增了多语言支持在连接管理中的具体应用说明
-- 完善了加载提示服务的国际化集成机制
-- 增强了用户体验在多语言环境下的描述
+- 修复了原生断线事件正确触发connectionLost事件的问题
+- 增强了日志记录功能，包括错误、关闭和连接失败事件的详细日志
+- 改进了事件传播机制，确保所有订阅者适当接收连接状态变化
+- 优化了错误处理流程，提升了连接管理的健壮性
 
 ## 目录
 1. [简介](#简介)
@@ -44,7 +46,7 @@
 
 WebSocket通信模块是Macro Deck客户端应用的核心通信层，负责与Macro Deck服务器建立实时双向通信连接。该模块实现了完整的WebSocket连接生命周期管理，包括连接建立、消息处理、心跳检测、断线重连和错误处理等功能。
 
-模块采用RxJS的WebSocketSubject实现，提供了响应式编程模型，支持异步消息处理和事件驱动架构。通过协议处理器服务，模块能够支持多协议版本的消息解析和处理。**最新更新：已实现全面的国际化支持，确保连接等待状态等多语言用户体验的一致性。**
+模块采用RxJS的WebSocketSubject实现，提供了响应式编程模型，支持异步消息处理和事件驱动架构。通过协议处理器服务，模块能够支持多协议版本的消息解析和处理。**最新更新：已修复原生断线事件处理问题，增强了日志记录和事件传播机制，确保所有订阅者能够正确接收连接状态变化。**
 
 ## 项目结构
 
@@ -59,6 +61,8 @@ P2[protocol2.service.ts<br/>协议2服务]
 PM[protocol2-messages.ts<br/>消息构建器]
 LS[loading.service.ts<br/>加载服务]
 CC[connecting.component.ts<br/>连接弹窗组件]
+CF[connection-failed.component.ts<br/>连接失败弹窗]
+CL[connection-lost.page.ts<br/>连接丢失页面]
 subgraph "数据类型"
 C[connection.ts<br/>连接配置]
 WM[ws-message.ts<br/>消息接口]
@@ -68,11 +72,12 @@ PS[ping.service.ts<br/>心跳检测]
 CS[connection.service.ts<br/>连接管理]
 MD[macro-deck.service.ts<br/>面板服务]
 IS[i18n.service.ts<br/>国际化服务]
+NS[navigation.service.ts<br/>导航服务]
 end
 subgraph "UI组件"
 IC[insecure-connection.component.ts<br/>不安全连接弹窗]
-CL[connection-lost.page.ts<br/>连接丢失页面]
 WH[web-home.page.ts<br/>Web主页]
+HP[home.page.ts<br/>主页]
 end
 subgraph "国际化资源"
 EN[en.json<br/>英文翻译]
@@ -84,13 +89,20 @@ P2 --> MD
 WS --> PS
 WS --> CS
 WS --> LS
+WS --> NS
 WS --> IS
 WS --> IC
+WS --> CF
+WS --> CL
 WS --> C
 WS --> WM
 LS --> CC
 IS --> EN
 IS --> ZH
+HP --> WS
+WH --> WS
+CL --> WS
+CF --> WS
 ```
 
 **图表来源**
@@ -113,9 +125,9 @@ WebsocketService是整个WebSocket通信模块的核心控制器，负责管理W
 - 连接管理：支持通过连接配置或连接字符串建立连接
 - 消息处理：通过协议处理器分发消息到相应协议服务
 - 状态监控：跟踪连接状态、连接中状态和关闭状态
-- 错误处理：处理安全错误、连接失败和异常关闭
-- 事件通知：提供连接成功、连接丢失、连接失败等事件
-- **国际化支持：集成TranslateService实现多语言用户界面**
+- **增强的错误处理：包含详细的日志记录和错误分类处理**
+- **改进的事件通知：确保所有订阅者正确接收连接状态变化**
+- 国际化支持：集成TranslateService实现多语言用户界面
 
 **关键属性：**
 - `isConnected`: 当前连接状态
@@ -124,20 +136,63 @@ WebsocketService是整个WebSocket通信模块的核心控制器，负责管理W
 - `url`: 当前连接URL
 - `connection`: 当前连接配置
 - `translate`: TranslateService实例用于国际化
+- `connectionClosed`: 连接关闭事件流
+- `connectionOpened`: 连接打开事件流
 
-**国际化集成示例：**
+**增强日志记录示例：**
 ```typescript
-// 连接建立时显示国际化的加载提示
-await this.loadingService.showLoading(this.translate.instant('connection.connectingTo', { name: connection.name }));
+// 连接关闭事件详细日志
+console.warn(`[WS] connectionClosed fired code=${closeEvent.code} closing=${this.closing} isConnected=${this.isConnected}`);
 
-// 连接成功后显示等待接受的国际化提示
-await this.loadingService.showLoading(this.translate.instant('connection.waitingForAccept'));
+// 错误处理详细日志
+console.warn(`[WS] handleError code=${closeEvent.code} isConnected=${this.isConnected} webVersion=${environment.webVersion}`);
+
+// 事件发射详细日志
+console.warn('[WS] emit connectionLost (native) before navigating to ConnectionLost');
 ```
 
 **章节来源**
 - [websocket.service.ts:20-57](file://src/app/services/websocket/websocket.service.ts#L20-L57)
 - [websocket.service.ts:63-87](file://src/app/services/websocket/websocket.service.ts#L63-L87)
 - [websocket.service.ts:161-173](file://src/app/services/websocket/websocket.service.ts#L161-L173)
+
+### 连接丢失页面 (ConnectionLostPage)
+
+连接丢失页面专门处理原生应用中的连接断开情况，提供自动重试机制和用户交互界面。
+
+**核心功能：**
+- 连接状态监听：监听connectionFailed事件
+- 自动重试机制：10秒倒计时后自动尝试重新连接
+- 用户控制：允许用户取消重试并返回首页
+- 连接配置验证：检查连接配置的有效性
+
+**章节来源**
+- [connection-lost.page.ts:48-53](file://src/app/pages/connection-lost/connection-lost.page.ts#L48-L53)
+- [connection-lost.page.ts:59-80](file://src/app/pages/connection-lost/connection-lost.page.ts#L59-L80)
+
+### 连接失败弹窗 (ConnectionFailedComponent)
+
+连接失败弹窗组件用于显示详细的连接错误信息，帮助用户了解连接失败的具体原因。
+
+**功能特性：**
+- 错误信息显示：展示连接失败的详细信息
+- 连接名称标识：显示正在尝试连接的服务器名称
+- 用户交互：提供关闭弹窗的操作
+
+**章节来源**
+- [connection-failed.component.ts:15-28](file://src/app/pages/home/modals/connection-failed/connection-failed.component.ts#L15-L28)
+
+### 主页事件处理 (HomePage)
+
+主页组件集成了WebSocket事件监听，提供连接失败的用户反馈和Ping服务的协调管理。
+
+**事件处理功能：**
+- 连接失败弹窗显示：监听connectionFailed事件并显示错误弹窗
+- Ping服务协调：在连接关闭后重新启动Ping检测
+- 可用连接列表管理：动态更新可用连接状态
+
+**章节来源**
+- [home.page.ts:127-134](file://src/app/pages/home/home.page.ts#L127-L134)
 
 ### 加载服务 (LoadingService)
 
@@ -148,23 +203,6 @@ await this.loadingService.showLoading(this.translate.instant('connection.waiting
 - 消息传递：支持动态加载消息内容
 - 取消操作：支持用户取消连接操作
 - 防重复叠加：自动关闭已有弹窗防止重复显示
-
-**国际化支持：**
-```typescript
-// 显示带国际化消息的加载弹窗
-async showLoading(text: string) {
-  await this.dismiss()
-  this.openModal = await this.modalController.create({
-    component: ConnectingComponent,
-    componentProps: {
-      message: text, // 接收国际化后的文本
-      canceled: this.canceled
-    },
-    backdropDismiss: false
-  });
-  await this.openModal.present();
-}
-```
 
 **章节来源**
 - [loading.service.ts:32-48](file://src/app/services/loading/loading.service.ts#L32-L48)
@@ -178,13 +216,6 @@ async showLoading(text: string) {
 - 用户取消操作：支持用户主动取消连接
 - 国际化按钮文本：使用翻译管道显示本地化文本
 - 平台适配：根据运行环境调整UI行为
-
-**国际化实现：**
-```html
-<!-- 使用Angular Translate管道进行国际化 -->
-<span id="message" class="d-block text-center h4">{{message}}</span>
-<ion-button (click)="cancel()" class="mt-5">{{ 'common.cancel' | translate }}</ion-button>
-```
 
 **章节来源**
 - [connecting.component.ts:17-33](file://src/app/pages/home/modals/connecting/connecting.component.ts#L17-L33)
@@ -217,7 +248,7 @@ async showLoading(text: string) {
 
 ## 架构概览
 
-WebSocket通信模块采用分层架构设计，确保了良好的关注点分离和可维护性，并集成了完整的国际化支持系统。
+WebSocket通信模块采用分层架构设计，确保了良好的关注点分离和可维护性，并集成了完整的国际化支持系统和增强的错误处理机制。
 
 ```mermaid
 graph TB
@@ -225,6 +256,7 @@ subgraph "应用层"
 UI[用户界面]
 NAV[导航服务]
 I18N[国际化服务]
+LOG[日志系统]
 end
 subgraph "服务层"
 WS[WebSocket服务]
@@ -255,6 +287,7 @@ WS --> CS
 WS --> SS
 WS --> LS
 WS --> I18N
+WS --> LOG
 WS --> ENV
 WS --> SERVER
 PS --> HTTP
@@ -272,7 +305,7 @@ LS --> UI
 
 ### 连接建立流程
 
-WebSocket连接建立过程遵循严格的步骤顺序，确保连接的可靠性和安全性，并集成国际化支持。
+WebSocket连接建立过程遵循严格的步骤顺序，确保连接的可靠性和安全性，并集成国际化支持和增强的错误处理。
 
 ```mermaid
 sequenceDiagram
@@ -283,6 +316,7 @@ participant PH as 协议处理器
 participant P2 as 协议2服务
 participant LS as 加载服务
 participant I18N as 国际化服务
+participant LOG as 日志系统
 participant SERVER as 服务器
 UI->>WS : connectToConnection()
 WS->>I18N : 获取国际化文本
@@ -301,6 +335,7 @@ P2->>MD : 设置面板配置
 P2->>SERVER : GET_BUTTONS请求
 SERVER-->>P2 : 按钮数据
 P2->>MD : 更新按钮列表
+WS->>LOG : 记录连接成功日志
 ```
 
 **图表来源**
@@ -313,9 +348,83 @@ P2->>MD : 更新按钮列表
 - [websocket.service.ts:161-173](file://src/app/services/websocket/websocket.service.ts#L161-L173)
 - [protocol2-messages.ts:9-23](file://src/app/datatypes/protocol2/protocol2-messages.ts#L9-L23)
 
+### 增强的断线重连机制
+
+**更新** WebSocket连接管理现已实现更健壮的断线重连机制，修复了原生断线事件处理问题，并增强了日志记录和事件传播。
+
+**改进的错误处理流程：**
+
+```mermaid
+flowchart TD
+Start([连接断开]) --> CheckClosing{"是否主动关闭?"}
+CheckClosing --> |是| HomeNav["导航到主页"]
+CheckClosing --> |否| CheckCode{"关闭码检查"}
+CheckCode --> |1000| HomeNav
+CheckCode --> |其他| LogError["记录详细错误日志"]
+LogError --> CheckEnv{"检查环境"}
+CheckEnv --> |Web版本| EmitLost["触发connectionLost事件"]
+CheckEnv --> |原生应用| CheckStatus{"检查连接状态"}
+CheckStatus --> |已连接| EmitNativeLost["触发connectionLost事件"]
+EmitNativeLost --> SetFalse["设置isConnected=false"]
+SetFalse --> LostPage["导航到连接丢失页面"]
+CheckStatus --> |未连接| FailedEvent["触发connectionFailed事件"]
+FailedEvent --> End([结束])
+EmitLost --> End
+LostPage --> End
+HomeNav --> End
+```
+
+**图表来源**
+- [websocket.service.ts:197-229](file://src/app/services/websocket/websocket.service.ts#L197-L229)
+- [connection-lost.page.ts:128-136](file://src/app/pages/connection-lost/connection-lost.page.ts#L128-L136)
+
+**增强的日志记录功能：**
+
+```typescript
+// 连接关闭事件详细日志
+console.warn(`[WS] connectionClosed fired code=${closeEvent.code} closing=${this.closing} isConnected=${this.isConnected}`);
+
+// 错误处理详细日志
+console.warn(`[WS] handleError code=${closeEvent.code} isConnected=${this.isConnected} webVersion=${environment.webVersion}`);
+
+// 事件发射详细日志
+console.warn('[WS] emit connectionLost (native) before navigating to ConnectionLost');
+console.warn('[WS] emit connectionFailed: ' + closeDetails);
+```
+
+**改进的事件传播机制：**
+
+```typescript
+// Web版本直接触发连接丢失事件
+if (environment.webVersion) {
+  console.warn('[WS] emit connectionLost (web)');
+  this.connectionLost.emit();
+  return;
+}
+
+// 原生应用已连接状态下断开
+if (this.isConnected) {
+  console.warn('[WS] emit connectionLost (native) before navigating to ConnectionLost');
+  this.connectionLost.emit();
+  this.isConnected = false;
+  await this.navigationService.navigateTo(NavigationDestination.ConnectionLost);
+  return;
+}
+
+// 未建立连接时失败，触发连接失败事件
+let closeDetails = `Code: ${closeEvent.code}\nReason: ${closeEvent.reason}\nWas clean: ${closeEvent.wasClean}`;
+console.warn('[WS] emit connectionFailed: ' + closeDetails);
+this.connectionFailed.emit(closeDetails);
+```
+
+**章节来源**
+- [websocket.service.ts:142-172](file://src/app/services/websocket/websocket.service.ts#L142-L172)
+- [websocket.service.ts:202-229](file://src/app/services/websocket/websocket.service.ts#L202-L229)
+- [connection-lost.page.ts:121-130](file://src/app/pages/connection-lost/connection-lost.page.ts#L121-L130)
+
 ### 国际化连接状态管理
 
-**更新** WebSocket连接等待状态现已完全支持国际化，通过TranslateService实现多语言用户体验。
+WebSocket连接等待状态现已完全支持国际化，通过TranslateService实现多语言用户体验。
 
 **国际化实现细节：**
 
@@ -363,35 +472,6 @@ this.connectionOpened.subscribe(async () => {
 - [websocket.service.ts:161-173](file://src/app/services/websocket/websocket.service.ts#L161-L173)
 - [en.json:128-133](file://src/assets/i18n/en.json#L128-L133)
 - [zh.json:128-133](file://src/assets/i18n/zh.json#L128-L133)
-
-### 断线重连机制
-
-模块实现了智能的断线重连策略，根据不同场景采取不同的重连方式。
-
-```mermaid
-flowchart TD
-Start([连接断开]) --> CheckClosing{"是否主动关闭?"}
-CheckClosing --> |是| HomeNav["导航到主页"]
-CheckClosing --> |否| CheckCode{"关闭码检查"}
-CheckCode --> |1000| HomeNav
-CheckCode --> |其他| CheckEnv{"检查环境"}
-CheckEnv --> |Web版本| EmitLost["触发连接丢失事件"]
-CheckEnv --> |原生应用| CheckStatus{"检查连接状态"}
-CheckStatus --> |已连接| LostPage["导航到连接丢失页面"]
-CheckStatus --> |未连接| FailedEvent["触发连接失败事件"]
-EmitLost --> End([结束])
-LostPage --> End
-FailedEvent --> End
-HomeNav --> End
-```
-
-**图表来源**
-- [websocket.service.ts:197-219](file://src/app/services/websocket/websocket.service.ts#L197-L219)
-- [connection-lost.page.ts:128-136](file://src/app/pages/connection-lost/connection-lost.page.ts#L128-L136)
-
-**章节来源**
-- [websocket.service.ts:142-172](file://src/app/services/websocket/websocket.service.ts#L142-L172)
-- [connection-lost.page.ts:121-130](file://src/app/pages/connection-lost/connection-lost.page.ts#L121-L130)
 
 ### 消息序列化和反序列化
 
@@ -478,7 +558,7 @@ end
 ```
 
 **图表来源**
-- [ping.service.ts:36-61](file://src/app/services/ping/ping.service.ts#L36-L61)
+- [ping.service.ts:36-61](file://src/app/services/ping/ping.service.ts#L36-61)
 - [ping.service.ts:119-128](file://src/app/services/ping/ping.service.ts#L119-L128)
 
 **章节来源**
@@ -510,7 +590,7 @@ end
 
 ## 依赖关系分析
 
-WebSocket通信模块的依赖关系体现了清晰的层次结构和职责分离，并集成了国际化支持。
+WebSocket通信模块的依赖关系体现了清晰的层次结构和职责分离，并集成了国际化支持和增强的错误处理机制。
 
 ```mermaid
 graph TB
@@ -526,6 +606,7 @@ PH[协议处理器]
 P2[协议2服务]
 PS[Ping服务]
 LS[加载服务]
+NS[导航服务]
 end
 subgraph "数据服务"
 CS[连接服务]
@@ -533,12 +614,13 @@ SS[设置服务]
 end
 subgraph "业务服务"
 MD[MacroDeck服务]
-NS[导航服务]
 end
 subgraph "UI组件"
 IC[不安全连接弹窗]
 CL[连接丢失页面]
+CF[连接失败弹窗]
 WH[Web主页]
+HP[主页]
 CC[连接弹窗组件]
 end
 subgraph "国际化资源"
@@ -560,9 +642,13 @@ WS --> SS
 WS --> LS
 WS --> NS
 WS --> IC
+WS --> CF
+WS --> CL
 WS --> TRANSLATE
 LS --> CC
 CL --> WS
+CF --> WS
+HP --> WS
 WH --> WS
 TRANSLATE --> EN
 TRANSLATE --> ZH
@@ -595,7 +681,7 @@ TRANSLATE --> ZH
 
 ### 国际化性能优化
 
-**更新** 国际化系统的性能优化措施：
+国际化系统的性能优化措施：
 
 **延迟加载：**
 - 按需加载翻译资源文件
@@ -643,6 +729,11 @@ TRANSLATE --> ZH
 - 处理：检查翻译文件完整性，验证翻译键值存在
 - 预防：建立翻译文件完整性检查机制
 
+**连接事件处理问题：**
+- 现象：连接丢失事件未正确触发或订阅者未收到通知
+- 处理：检查日志输出，验证事件传播链路
+- 预防：确保所有订阅者正确注册和注销事件监听
+
 ### 调试技巧
 
 **开发环境调试：**
@@ -650,43 +741,50 @@ TRANSLATE --> ZH
 - 使用浏览器开发者工具监控WebSocket通信
 - 检查网络面板中的WebSocket帧
 - 验证国际化键值的正确加载
+- 监控连接事件的生命周期
 
 **生产环境监控：**
 - 实施连接状态监控
 - 记录连接失败原因统计
 - 设置性能指标告警
 - 监控国际化资源的加载性能
+- 跟踪事件传播的成功率
 
 **章节来源**
 - [websocket.service.ts:125-132](file://src/app/services/websocket/websocket.service.ts#L125-L132)
+- [websocket.service.ts:147-152](file://src/app/services/websocket/websocket.service.ts#L147-L152)
+- [websocket.service.ts:203-228](file://src/app/services/websocket/websocket.service.ts#L203-L228)
 - [insecure-connection.component.ts:17-21](file://src/app/pages/home/modals/insecure-connection/insecure-connection.component.ts#L17-L21)
 
 ## 结论
 
-WebSocket通信模块通过精心设计的架构和完善的错误处理机制，为Macro Deck客户端应用提供了稳定可靠的实时通信能力。**最新的国际化支持进一步提升了多语言环境下的用户体验一致性。** 模块的主要优势包括：
+WebSocket通信模块通过精心设计的架构和完善的错误处理机制，为Macro Deck客户端应用提供了稳定可靠的实时通信能力。**最新的改进进一步提升了连接管理的健壮性，修复了原生断线事件处理问题，增强了日志记录和事件传播机制。** 模块的主要优势包括：
 
 **架构优势：**
 - 清晰的分层设计和职责分离
 - 响应式编程模型提高代码可维护性
 - 插件化的协议处理支持未来扩展
-- **完整的国际化支持体系**
+- 完整的国际化支持体系
+- **增强的错误处理和日志记录机制**
 
 **功能完整性：**
 - 全面的连接生命周期管理
 - 强大的错误处理和恢复机制
 - 安全的连接建立和认证流程
-- **多语言用户界面支持**
+- 多语言用户界面支持
+- **改进的事件传播确保所有订阅者正确接收状态变化**
 
 **用户体验：**
 - 平滑的断线重连体验
 - 及时的状态反馈和用户提示
 - 灵活的连接配置选项
-- **一致的多语言界面体验**
+- 一致的多语言界面体验
+- **详细的错误信息和诊断日志**
 
-**国际化优势：**
-- 标准化的翻译键值管理
-- 动态语言切换支持
-- 丰富的连接状态提示
-- 友好的本地化用户体验
+**可靠性提升：**
+- 修复了原生断线事件处理问题
+- 增强了连接状态的准确性
+- 改进了事件传播的可靠性
+- 提供了更详细的调试信息
 
-该模块为开发者提供了坚实的基础，支持进一步的功能扩展和性能优化，是构建高性能实时应用的理想选择。国际化功能的完善使得应用能够更好地服务于全球用户群体。
+该模块为开发者提供了坚实的基础，支持进一步的功能扩展和性能优化，是构建高性能实时应用的理想选择。最新的质量改进使得应用能够更好地处理各种连接异常情况，为用户提供更加稳定和可靠的连接体验。

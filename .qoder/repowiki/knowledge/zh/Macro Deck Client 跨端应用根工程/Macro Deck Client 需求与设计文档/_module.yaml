@@ -1,0 +1,9 @@
+schema_version: 1
+module_path: docs
+title: Macro Deck Client 需求与设计文档
+scope:
+    - docs/
+source_files: []
+depends_on: []
+related_to:
+    - path: app

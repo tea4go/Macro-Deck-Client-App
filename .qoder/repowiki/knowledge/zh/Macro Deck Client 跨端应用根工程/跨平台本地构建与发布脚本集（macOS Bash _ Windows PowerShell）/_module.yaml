@@ -1,10 +1,11 @@
 schema_version: 1
 module_path: scripts
-title: 本地构建与发布脚本（macOS/Windows 双栈）
+title: 跨平台本地构建与发布脚本集（macOS Bash / Windows PowerShell）
 scope:
     - scripts/
 source_files: []
 depends_on: []
 related_to:
     - path: android
+    - path: app
     - path: ios
