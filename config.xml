@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.suchbyte.macrodeck" version="3.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="com.suchbyte.macrodeck" version="3.1.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
     <name>Macro Deck Client</name>
     <description>Client app for Macro Deck.</description>
     <author email="info@manuel-mayer.dev" href="https://manuel-mayer.dev/">Manuel Mayer</author>

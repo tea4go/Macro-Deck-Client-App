@@ -5,7 +5,7 @@ export const environment = {
   /** Web 版本标识 */
   webVersion: true,
   /** 应用版本号（= Android versionName，由 Sync-AppVersion 从 build.gradle 同步） */
-  version: "3.0.1",
+  version: "3.1.0",
   /** 应用构建号（= Android versionCode，由 Sync-AppVersion 从 build.gradle 同步） */
-  versionCode: 49,
+  versionCode: 50,
 };

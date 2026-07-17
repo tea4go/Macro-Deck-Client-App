@@ -1,7 +1,7 @@
 {
   "name": "macro-deck-client",
   "description": "Client app for Macro Deck.",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "author": "Manuel Mayer",
   "homepage": "https://macro-deck.app",
   "scripts": {
