@@ -3,6 +3,7 @@ import {WebsocketService} from "../../services/websocket/websocket.service";
 import {Router} from "@angular/router";
 import {SettingsModalComponent} from "../shared/modals/settings-modal/settings-modal.component";
 import {SendTextModalComponent} from "./modals/send-text-modal/send-text-modal.component";
+import {SendFileModalComponent} from "./modals/send-file-modal/send-file-modal.component";
 import {IonicModule, ModalController, ViewDidEnter, ViewDidLeave} from "@ionic/angular";
 import {environment} from "../../../environments/environment";
 import {SettingsService} from "../../services/settings/settings.service";
@@ -63,6 +64,14 @@ export class DeckPage implements ViewDidEnter {
   async openTextInput() {
     const modal = await this.modalController.create({
       component: SendTextModalComponent
+    });
+    await modal.present();
+  }
+
+  /** 打开发送文件弹窗 */
+  async openSendFile() {
+    const modal = await this.modalController.create({
+      component: SendFileModalComponent
     });
     await modal.present();
   }

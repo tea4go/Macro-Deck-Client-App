@@ -49,6 +49,7 @@
     "openFullScreen": "Open full screen",
     "settings": "Settings",
     "sendText": "Send text",
+    "sendFile": "Send file",
     "closeConnection": "Close connection"
   },
   "sendText": {
@@ -57,6 +58,13 @@
     "sendKeyboard": "Send keystrokes",
     "sendClipboard": "Send text",
     "pasteFromClipboard": "Paste from clipboard"
+  },
+  "sendFile": {
+    "title": "Send file",
+    "choose": "Choose file",
+    "waitingAck": "Waiting for server confirmation...",
+    "success": "File sent",
+    "failed": "Failed to send file"
   },
   "home": {
     "settings": "Settings",

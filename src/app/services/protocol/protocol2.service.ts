@@ -24,6 +24,12 @@ export class Protocol2Service {
     /** WebSocket 主题对象，用于向服务器发送消息 */
     private socket: WebSocketSubject<any> | undefined;
 
+    /** 文件分块大小（512KB），与 HAP 保持一致 */
+    private static readonly FILE_CHUNK_SIZE = 512 * 1024;
+
+    /** 等待服务端 SEND_FILE_ACK 的 Promise 解析器，按 TransferId 索引 */
+    private fileAckResolvers: Map<string, (success: boolean) => void> = new Map();
+
     constructor(private macroDeckService: MacroDeckService,
                 private loadingService: LoadingService,
                 private navigationService: NavigationService) {
@@ -91,7 +97,75 @@ export class Protocol2Service {
                 existingWidgetContent.labelBase64 = receivedButton.LabelBase64;
                 this.macroDeckService.updateWidget(existingWidget);
                 break;
+            case "SEND_FILE_ACK":
+                // 文件接收完成确认：唤醒对应 TransferId 的等待 Promise
+                let ackTransferId = message.TransferId as string;
+                let ackSuccess = message.Success === true || message.Success === "true";
+                let resolver = this.fileAckResolvers.get(ackTransferId);
+                if (resolver) {
+                    this.fileAckResolvers.delete(ackTransferId);
+                    resolver(ackSuccess);
+                }
+                break;
         }
+    }
+
+    /**
+     * 分块发送文件到服务器：BEGIN → 若干 CHUNK(base64) → END，最后等待 SEND_FILE_ACK。
+     * @param file 要发送的文件
+     * @param onProgress 进度回调：sent 已发字节、total 总字节、waitingAck 是否在等待服务端确认
+     * @returns 服务端确认成功返回 true
+     */
+    public async sendFile(file: File, onProgress?: (sent: number, total: number, waitingAck: boolean) => void): Promise<boolean> {
+        const transferId = crypto.randomUUID();
+        const fileSize = file.size;
+
+        this.send(Protocol2Messages.getSendFileBeginMessage(transferId, file.name, fileSize));
+
+        let offset = 0;
+        while (offset < fileSize) {
+            const end = Math.min(offset + Protocol2Service.FILE_CHUNK_SIZE, fileSize);
+            const base64 = await this.readChunkAsBase64(file.slice(offset, end));
+            this.send(Protocol2Messages.getSendFileChunkMessage(transferId, base64));
+            offset = end;
+            onProgress?.(offset, fileSize, false);
+        }
+
+        this.send(Protocol2Messages.getSendFileEndMessage(transferId));
+        onProgress?.(fileSize, fileSize, true);
+
+        return this.waitForFileAck(transferId);
+    }
+
+    /** 将文件分片读取为 base64 字符串（去掉 data URL 前缀） */
+    private readChunkAsBase64(blob: Blob): Promise<string> {
+        return new Promise<string>((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => {
+                const result = reader.result as string;
+                const comma = result.indexOf(",");
+                resolve(comma >= 0 ? result.substring(comma + 1) : result);
+            };
+            reader.onerror = () => reject(reader.error);
+            reader.readAsDataURL(blob);
+        });
+    }
+
+    /** 等待服务端 SEND_FILE_ACK，超时（默认 30s）未收到则判定失败 */
+    private waitForFileAck(transferId: string, timeoutMs: number = 30000): Promise<boolean> {
+        return new Promise<boolean>((resolve) => {
+            const timer = setTimeout(() => {
+                if (this.fileAckResolvers.has(transferId)) {
+                    this.fileAckResolvers.delete(transferId);
+                    resolve(false);
+                }
+            }, timeoutMs);
+
+            this.fileAckResolvers.set(transferId, (success: boolean) => {
+                clearTimeout(timer);
+                resolve(success);
+            });
+        });
     }
 
     /**

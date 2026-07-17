@@ -49,6 +49,7 @@
     "openFullScreen": "全屏打开",
     "settings": "设置",
     "sendText": "发送文本",
+    "sendFile": "发送文件",
     "closeConnection": "关闭连接"
   },
   "sendText": {
@@ -57,6 +58,13 @@
     "sendKeyboard": "发送按键",
     "sendClipboard": "发送文本",
     "pasteFromClipboard": "从剪贴板读入"
+  },
+  "sendFile": {
+    "title": "发送文件",
+    "choose": "选择文件",
+    "waitingAck": "等待服务端确认...",
+    "success": "文件已发送",
+    "failed": "发送文件失败"
   },
   "home": {
     "settings": "设置",

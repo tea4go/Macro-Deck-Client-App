@@ -1,0 +1,28 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-button (click)="cancel()" [disabled]="sending">{{ 'common.cancel' | translate }}</ion-button>
+    </ion-buttons>
+    <ion-title>{{ 'sendFile.title' | translate }}</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  @if (!sending) {
+    <input type="file" hidden #fileInput (change)="onFileSelected($event)" />
+    <ion-button expand="block" (click)="fileInput.click()">
+      <ion-icon slot="start" name="document-outline"></ion-icon>
+      {{ 'sendFile.choose' | translate }}
+    </ion-button>
+  } @else {
+    <p class="file-name">{{ fileName }}</p>
+    <ion-progress-bar [value]="progress"></ion-progress-bar>
+    <p class="status-text">
+      @if (waitingAck) {
+        {{ 'sendFile.waitingAck' | translate }}
+      } @else {
+        {{ progressPercent }}%
+      }
+    </p>
+  }
+</ion-content>
