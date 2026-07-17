@@ -13,6 +13,7 @@ import {Connection} from "../../datatypes/connection";
 import {NavigationService} from "../navigation/navigation.service";
 import {NavigationDestination} from "../../enums/navigation-destination";
 import {TranslateService} from "@ngx-translate/core";
+import {DiagnosticService} from "../diagnostic/diagnostic.service";
 
 /** WebSocket 通信服务，管理与 Macro Deck 服务器的实时连接 */
 @Injectable({
@@ -49,12 +50,22 @@ export class WebsocketService {
   /** 消息订阅对象 */
   private subscription: Subscription = new Subscription();
 
+  /** 心跳发送间隔（毫秒） */
+  private static readonly HEARTBEAT_INTERVAL = 3000;
+  /** 连续漏应答阈值，超过则判定连接已死 */
+  private static readonly MAX_HEARTBEAT_MISSES = 3;
+  /** 心跳定时器句柄 */
+  private heartbeatTimer: any;
+  /** 已发送但未收到 PONG 的次数 */
+  private heartbeatMissedCount = 0;
+
   constructor(private loadingService: LoadingService,
               private modalController: ModalController,
               private settingsService: SettingsService,
               private protocolHandlerService: ProtocolHandlerService,
               private navigationService: NavigationService,
-              private translate: TranslateService) {
+              private translate: TranslateService,
+              private diagnosticService: DiagnosticService) {
     this.subscribeOpenClose();
   }
 
@@ -72,8 +83,10 @@ export class WebsocketService {
     } else {
       await this.loadingService.showLoading(this.translate.instant('connection.connectingTo', { name: connection.name }));
     }
-    // 根据是否启用 SSL 构建 WebSocket 地址
-    this.url = `${connection.ssl ? "wss://" : "ws://"}${connection.host}:${connection.port}`;
+    // 根据是否启用 SSL 构建 WebSocket 地址。
+    // SSL 且端口为默认 8191 时换算到 8192（服务端 SSL 监听在 8192），与 HAP 行为一致。
+    const port = connection.ssl && connection.port === 8191 ? 8192 : connection.port;
+    this.url = `${connection.ssl ? "wss://" : "ws://"}${connection.host}:${port}`;
     this.connection = connection;
     await this.connect();
   }
@@ -116,6 +129,11 @@ export class WebsocketService {
 
     this.subscription = this.socket.subscribe({
       next: async (message: any) => {
+        // 心跳应答：收到 PONG 归零漏应答计数，不下发给协议层
+        if (message?.Method === "PONG") {
+          this.heartbeatMissedCount = 0;
+          return;
+        }
         // 收到消息后交由协议处理器处理
         await this.protocolHandlerService.handleMessage(message);
       },
@@ -145,6 +163,7 @@ export class WebsocketService {
   private subscribeOpenClose() {
     this.connectionClosed.subscribe(async closeEvent => {
       console.warn(`[WS] connectionClosed fired code=${closeEvent.code} closing=${this.closing} isConnected=${this.isConnected}`);
+      this.stopHeartbeat();
       await this.loadingService.dismiss();
       this.subscription.unsubscribe();
       console.warn('[WS] emit closed');
@@ -172,8 +191,39 @@ export class WebsocketService {
       await this.loadingService.showLoading(this.translate.instant('connection.waitingForAccept'));
       // 发送连接确认消息，包含客户端 ID 和认证令牌
       let clientId = await this.settingsService.getClientId();
-      this.socket?.next(Protocol2Messages.getConnectedMessage(clientId, this.connection?.token));
+      let deviceType = this.diagnosticService.isAndroid() ? "Android"
+        : this.diagnosticService.isiOS() ? "iOS" : "Web";
+      this.socket?.next(Protocol2Messages.getConnectedMessage(clientId, this.connection?.token, deviceType));
+      this.startHeartbeat();
     });
+  }
+
+  /**
+   * 启动应用层心跳。每隔固定间隔发送 PING 并累加漏应答计数，
+   * 收到 PONG 时归零；连续多次无应答则主动断开，触发重连流程。
+   */
+  private startHeartbeat() {
+    this.stopHeartbeat();
+    this.heartbeatMissedCount = 0;
+    this.heartbeatTimer = setInterval(() => {
+      this.heartbeatMissedCount++;
+      if (this.heartbeatMissedCount > WebsocketService.MAX_HEARTBEAT_MISSES) {
+        console.warn('[WS] heartbeat timeout, forcing disconnect');
+        this.stopHeartbeat();
+        this.socket?.complete();
+        return;
+      }
+      this.send(Protocol2Messages.getPingMessage());
+    }, WebsocketService.HEARTBEAT_INTERVAL);
+  }
+
+  /** 停止应用层心跳 */
+  private stopHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = undefined;
+    }
+    this.heartbeatMissedCount = 0;
   }
 
   /**
@@ -182,6 +232,7 @@ export class WebsocketService {
   public close() {
     console.log("Close requested");
     this.closing = true;
+    this.stopHeartbeat();
     this.socket?.complete();
     this.subscription.unsubscribe();
     this.connection = undefined;

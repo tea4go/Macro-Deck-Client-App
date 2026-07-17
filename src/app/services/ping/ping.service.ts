@@ -77,7 +77,9 @@ export class PingService {
    * @returns Ping URL
    */
   private getPingUrl(connection: Connection) {
-    return `${connection.ssl ? "https" : "http"}://${connection.host}:${connection.port}/ping`;
+    // SSL 且端口为默认 8191 时换算到 8192，与 WebSocket 连接保持一致。
+    const port = connection.ssl && connection.port === 8191 ? 8192 : connection.port;
+    return `${connection.ssl ? "https" : "http"}://${connection.host}:${port}/ping`;
   }
 
   /**
